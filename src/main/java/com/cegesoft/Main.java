@@ -6,12 +6,15 @@ import com.cegesoft.opencl.CLField;
 import com.cegesoft.opencl.CLFile;
 import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
+import com.cegesoft.ui.GameFrame;
 import com.nativelibs4java.opencl.CLMem;
 import org.bridj.PointerIO;
 import org.bridj.util.Tuple;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Application de simulation d'une partie de billard
@@ -31,23 +34,31 @@ public class Main {
         board.initialise(Board.INITIAL_POSITION);
 
         // Création de la fenêtre
-        //GameFrame frame = new GameFrame(board);
+        GameFrame frame = new GameFrame(board);
 
         // Création du processus de simulation
         Timer timer = new Timer();
 
         // Lorsque l'application est fermée, on libère les ressources
-//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            timer.cancel();
-//            handler.release();
-//        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            timer.cancel();
+            handler.release();
+        }));
 
         long start = System.currentTimeMillis();
 
-        for (int j = 0; j < 100; j++) {
-            GamePosition position = new GamePosition(board, board.getBallsField(), board.getDefaultQueue(), j);
-            position.move().waitFor();
-        }
+//        for (int j = 0; j < 100; j++) {
+            GamePosition position = new GamePosition(board, board.getBallsField(), board.getDefaultQueue());
+            List<Integer> betterAngles = position.move();
+            int bestAngle = betterAngles.get(0);
+            System.out.println("Angle : " + bestAngle);
+            System.out.println("Score : " + position.getScore(bestAngle));
+            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
+
+            board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle / 10.0)) * 250), (float) (Math.sin(Math.toRadians(bestAngle / 10.0)) * 5));
+
+
+//        }
 
 //        for (int i = 0; i < 360; i++) {
 //            CLEvent[] events = new CLEvent[100];
@@ -57,16 +68,16 @@ public class Main {
 //            }
 //            CLEvent.waitFor(events);
 //        }
+//
+//        long end = System.currentTimeMillis();
+//        System.out.println("Temps total : " + (end - start) + "ms");
 
-        long end = System.currentTimeMillis();
-        System.out.println("Temps total : " + (end - start) + "ms");
 
-
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                board.tick(frame);
-//            }
-//        }, 0L, (long) (Board.TIME_STEP * 1000));
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                board.tick(frame);
+            }
+        }, 0L, (long) (Board.TIME_STEP * 1000));
     }
 }

@@ -41,10 +41,7 @@ public class GameFrame extends JFrame {
                         float[] info = board.getBallInformation(0);
                         float vx = (e.getX() - middleX - info[0] * scale) * 5 / scale;
                         float vy = (e.getY() - middleY - info[1] * scale) * 5 / scale;
-                        Pointer<Float> pointer = board.getBallsBuffer().read(board.getDefaultQueue());
-                        pointer.set(2, vx);
-                        pointer.set(3, vy);
-                        board.getBallsBuffer().write(board.getDefaultQueue(), pointer, false).waitFor();
+                        board.setBallVelocity(0, vx, vy);
                     }
                 }
 
@@ -101,7 +98,7 @@ public class GameFrame extends JFrame {
                 if (i == 0)
                     g.setColor(Color.WHITE);
                 else
-                    g.setColor(info[4] == 0 ? ballColors[(i - 1) % 8] : Color.BLUE);
+                    g.setColor(info[4] <= 0 ? ballColors[(i - 1) % 8] : Color.BLUE);
                 g.fillOval((int) (info[0] * scale - scale) + middleX, (int)(info[1] * scale - scale) + middleY, (int)(2 * scale), (int) (2 * scale));
                 if (i >= 8) {
                     g.setColor(Color.WHITE);
