@@ -12,6 +12,7 @@ import com.nativelibs4java.opencl.CLQueue;
 import org.bridj.Pointer;
 
 import java.io.IOException;
+import java.util.List;
 
 public class Board {
 
@@ -122,7 +123,25 @@ public class Board {
     }
 
     private boolean firstEmptyTick = true;
+    public static boolean bestShot = false;
     public void tick(GameFrame frame) {
+        if (bestShot) {
+            bestShot = false;
+            System.out.println("Calculating best shot...");
+            long start = System.currentTimeMillis();
+            GamePosition position = new GamePosition(this, this.getBallsField(), this.getDefaultQueue());
+            List<Integer> betterAngles = position.move((GameFrame.GamePanel) frame.getContentPane(), frame);
+            int bestShot = betterAngles.get(0);
+            float bestAngle = position.getAngle(bestShot);
+            float bestScore = position.getScore(bestShot);
+            float bestNorm = position.getNorm(bestShot);
+            System.out.println("Angle : " + bestAngle);
+            System.out.println("Norme : " + bestNorm);
+            System.out.println("Score : " + bestScore);
+            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
+
+            this.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+        }
         if (!everyBallStopped()) {
             Main.count ++;
             this.gameInformationField.setValue(this.defaultQueue, 0L, 0f).waitFor();

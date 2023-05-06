@@ -45,17 +45,8 @@ public class Main {
             handler.release();
         }));
 
-        long start = System.currentTimeMillis();
 
 //        for (int j = 0; j < 100; j++) {
-            GamePosition position = new GamePosition(board, board.getBallsField(), board.getDefaultQueue());
-            List<Integer> betterAngles = position.move();
-            int bestAngle = betterAngles.get(0);
-            System.out.println("Angle : " + bestAngle);
-            System.out.println("Score : " + position.getScore(bestAngle));
-            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
-
-            board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle / 10.0)) * 250), (float) (Math.sin(Math.toRadians(bestAngle / 10.0)) * 5));
 
 
 //        }

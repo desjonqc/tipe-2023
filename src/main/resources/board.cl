@@ -1,3 +1,23 @@
+#ifdef cl_khr_fp64
+    #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#elif defined(cl_amd_fp64)
+    #pragma OPENCL EXTENSION cl_amd_fp64 : enable
+#else
+    #pragma OPENCL EXTENSION cl_khr_fp64 : disable
+#endif
+
+
+struct BoardDimensions {
+    int height;
+    int width;
+};
+
+struct DataContainer {
+    __global float* data;
+    int* shape;
+};
+
+
 __kernel void everyBallStopped(__global float* balls, int ballBufferSize, __global bool* out) {
     int i = get_global_id(0);
     if (balls[i * ballBufferSize + 2] != 0 || balls[i * ballBufferSize + 3] != 0) {
@@ -11,6 +31,29 @@ float abs_(float f) {
     }
     return f;
 }
+
+int getIndex(int shape[], int indices[]) {
+        int index = 0;
+        if (sizeof(indices) > sizeof(shape) - 1)
+            return -1;
+        int offset = 1;
+        for (int i = 0; i < sizeof(indices); i++) {
+            index += indices[i] * offset;
+            if (i < sizeof(indices) - 1)
+                offset *= shape[i];
+        }
+        return index;
+    }
+
+int* getIndices(int* shape, int index) {
+        int indices[sizeof(shape)];
+        int offset = 1;
+        for (int i = 0; i < sizeof(indices); i++) {
+            indices[i] = index / offset % shape[i];
+            offset *= shape[i];
+        }
+        return indices;
+    }
 
 float2 readPosition(__global float* balls, int ballBufferSize, int i) {
     return (float2) (balls[i * ballBufferSize], balls[i * ballBufferSize + 1]);
@@ -52,20 +95,20 @@ bool checkHole(__global float* balls, int ballBufferSize, int i, float height, f
         balls[i * ballBufferSize + 4] = i == 0 ? 0 : -1;
 
         if (get_global_id(0) == 0) {
-            gameInformation[1] -= 1.2;
+            gameInformation[indexOffset * 2 + 1] -= 1.2;
         } else if (get_global_id(0) < 8) {
-            gameInformation[1] += 1.1;
+            gameInformation[indexOffset * 2 + 1] += 1.1;
         } else if (get_global_id(0) > 8) {
-            gameInformation[1] -= 1.0;
+            gameInformation[indexOffset * 2 + 1] -= 1.0;
         } else {
             int s = 1;
             for (int j = 1; j < min(ballAmount / 2, 8); j++) {
-                if (i != (j + indexOffset) && balls[(j + indexOffset) * ballBufferSize + 4] >= 0) {
+                if (i != (j + indexOffset * ballAmount) && balls[(j + indexOffset * ballAmount) * ballBufferSize + 4] >= 0) {
                     s = -1;
                     break;
                 }
             }
-            gameInformation[1] = s * 1000.0;
+            gameInformation[indexOffset * 2 + 1] = s * 1000.0;
         }
         return true;
     }
@@ -86,18 +129,12 @@ float2 updateWallCollision(float2 position, float2 velocity, float height, float
 }
 
 __kernel void move_(int indexOffset, __global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
-    int i = get_global_id(0) + indexOffset;
+    int i = get_global_id(0) + indexOffset * ballAmount;
     const float2 position = readPosition(balls, ballBufferSize, i);
     const float2 velocity = readVelocity(balls, ballBufferSize, i);
 
-    debug[0] = velocity.x;
-    debug[1] = velocity.y;
-
     float2 positionOffset = updatePosition(position, velocity, time);
     float2 velocityOffset = updateVelocity(velocity, alpha);
-
-    debug[2] = velocity.x;
-    debug[3] = velocity.y;
 
     if (checkHole(balls, ballBufferSize, i, height, width, ballAmount, indexOffset, gameInformation)) {
         return;
@@ -105,8 +142,8 @@ __kernel void move_(int indexOffset, __global float* balls, int ballBufferSize, 
 
     velocityOffset = updateWallCollision(positionOffset, velocityOffset, height, width);
 
-    for (int j_ = i + 1; j_ < ballAmount; j_++) {
-        int j = j_ + indexOffset;
+    for (int j_ = get_global_id(0) + 1; j_ < ballAmount; j_++) {
+        int j = j_ + indexOffset * ballAmount;
         const float2 bPosition = readPosition(balls, ballBufferSize, j);
         const float2 bVelocity = readVelocity(balls, ballBufferSize, j);
         float2 bPositionOffset = bPosition;
@@ -139,21 +176,28 @@ __kernel void move_(int indexOffset, __global float* balls, int ballBufferSize, 
             balls[j * ballBufferSize + 4] = ((int) balls[j * ballBufferSize + 4]) & (~((int)pow(2.0f, i)));
         }
     }
-    debug[5] = (positionOffset - position).x;
-    debug[6] = (positionOffset - position).y;
     setPosition(balls, ballBufferSize, i, positionOffset - position);
-    debug[7] = balls[i * ballBufferSize];
-    debug[8] = balls[i * ballBufferSize + 1];
     setVelocity(balls, ballBufferSize, i, velocityOffset - velocity);
-    gameInformation[0] += length(readVelocity(balls, ballBufferSize, i));
+    if (isnan(length(velocityOffset))) {
+        debug[0] = 1;
+        debug[1] = i;
+        debug[2] = velocityOffset.x;
+        debug[3] = velocityOffset.y;
+    }
+    gameInformation[indexOffset * 2] += length(velocityOffset);
 }
 
-__kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition) {
+__kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
     int angle = get_global_id(2);
-    int norme = get_global_id(1);
-    int indexOffset = ballAmount * angle + ballAmount * anglePartition * norm;
-    balls[2 + indexOffset * ballBufferSize] = norme * cos((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition;
-    balls[3 + indexOffset * ballBufferSize] = norme * sin((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition;
+    int norm = get_global_id(1);
+    int indexOffset = angle + anglePartition * norm;
+    if (first == 1) {
+        balls[2 + indexOffset * ballBufferSize * ballAmount] = norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition;
+        balls[3 + indexOffset * ballBufferSize * ballAmount] = norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition;
+    } else if (gameInformation[(angle + anglePartition * norm) * 2] == 0) {
+        return;
+    }
+    gameInformation[(angle + anglePartition * norm) * 2] = 0;
     move_(indexOffset, balls, ballBufferSize, ballAmount, alpha, height, width, time, gameInformation, debug);
 }
 
@@ -165,8 +209,13 @@ __kernel void copy_buffer(__global float* ballsShort, __global float* balls, int
     int i = get_global_id(0);
     int angle = get_global_id(2);
     int norm = get_global_id(1);
-    for (int j = 0; j < ballBufferSize; j++)
-        balls[(i + ballAmount * angle + ballAmount * anglePartition * norm) * ballBufferSize + j] = ballsShort[i * ballBufferSize + j];
+    int new_size[] = {ballBufferSize, ballAmount, anglePartition};
+    int old_size[] = {ballBufferSize};
+    for (int j = 0; j < ballBufferSize; j++) {
+        int indices = {j, i, angle, norm};
+        int old_indices = {j, i};
+        balls[getIndex(new_size, indices)] = ballsShort[getIndex(old_size, old_indices)];
+    }
 }
 
 

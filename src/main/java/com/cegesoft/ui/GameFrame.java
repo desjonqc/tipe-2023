@@ -2,12 +2,18 @@ package com.cegesoft.ui;
 
 import com.cegesoft.Main;
 import com.cegesoft.game.Board;
+import com.cegesoft.game.GamePosition;
 import org.bridj.Pointer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class GameFrame extends JFrame {
 
@@ -31,8 +37,30 @@ public class GameFrame extends JFrame {
 
     public class GamePanel extends JPanel {
 
+        private Function<Integer, float[]> ballInformationFunction;
 
         public GamePanel() {
+            GameFrame.this.addKeyListener(new java.awt.event.KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                public void keyPressed(java.awt.event.KeyEvent evt) {
+                    if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
+                        Board.bestShot = true;
+                    }
+                    if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                        float bestNorm = 261;
+                        float bestAngle = 152.9f;
+                        board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+
+                }
+            });
             this.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -65,6 +93,7 @@ public class GameFrame extends JFrame {
 
                 }
             });
+
         }
         @Override
         public void paint(Graphics g) {
@@ -94,7 +123,7 @@ public class GameFrame extends JFrame {
                     new Color(0, 0, 0)
             };
             for (int i = 0; i < board.getBallsAmount(); i++) {
-                float[] info = board.getBallInformation(i);
+                float[] info = this.ballInformationFunction == null ? board.getBallInformation(i) : this.ballInformationFunction.apply(i);
                 if (i == 0)
                     g.setColor(Color.WHITE);
                 else
@@ -109,6 +138,10 @@ public class GameFrame extends JFrame {
                 if (i > 0)
                     g.drawString(String.valueOf(i), (int) (info[0] * scale - scale / (i < 10 ? 3 : 1.5)) + middleX, (int) (info[1] * scale + scale / 2) + middleY);
             }
+        }
+
+        public void setBallInformationFunction(Function<Integer, float[]> function) {
+            this.ballInformationFunction = function;
         }
     }
 }
