@@ -5,7 +5,48 @@
 #endif
 
 __constant int MAX_ARRAY_BUFFER_SIZE = 4;
+__constant int4 masks4[] = {(int4) (0xffffffff, 0, 0, 0),
+                          (int4) (0, 0xffffffff, 0, 0),
+                          (int4) (0, 0, 0xffffffff, 0),
+                          (int4) (0, 0, 0, 0xffffffff)};
+__constant int3 masks3[] = {(int3) (0xffffffff, 0, 0),
+                          (int3) (0, 0xffffffff, 0),
+                          (int3) (0, 0, 0xffffffff)};
+__constant int2 masks2[] = {(int2) (0xffffffff, 0),
+                          (int2) (0, 0xffffffff)};
 
+
+float* debug_global;
+
+int4 setComponent4(int4 vector, int index, int value) {
+    int4 mask = masks4[index];
+    return (vector & ~mask) + ((int4) (value) & mask);
+}
+
+int getComponent4(int4 vector, int index) {
+    int4 vect = vector & masks4[index];
+    return vect.x + vect.y + vect.z + vect.w;
+}
+
+int3 setComponent3(int3 vector, int index, int value) {
+    int3 mask = masks3[index];
+    return (vector & ~mask) + ((int3) (value) & mask);
+}
+
+int getComponent3(int3 vector, int index) {
+    int3 vect = vector & masks3[index];
+    return vect.x + vect.y + vect.z;
+}
+
+int2 setComponent2(int2 vector, int index, int value) {
+    int2 mask = masks2[index];
+    return (vector & ~mask) + ((int2) (value) & mask);
+}
+
+int getComponent2(int2 vector, int index) {
+    int2 vect = vector & masks2[index];
+    return vect.x + vect.y;
+}
 
 struct BoardDimensions {
     int height;
@@ -14,9 +55,9 @@ struct BoardDimensions {
 
 struct DataContainer {
     __global float* data;
-    const int* shape;
-    const int* gIds;
-    const int* sizes;
+    const int4 shape;
+    const int3 gIds;
+    const int2 sizes;
 };
 
 
@@ -35,53 +76,35 @@ float abs_(float f) {
 }
 
 
-int getIndex(int* shape, int* indices, int* arraySizes) {
+int4 buildIndices(struct DataContainer data, int j, int ballId) {
+    const int size = getComponent2(data.sizes, 1);
+
+    int4 indices = (int4) (j, 0, 0, 0);
+    if (getComponent3(data.gIds, 0) != -1) {
+        indices = (int4) setComponent4(indices, getComponent3(data.gIds, 0), ballId);
+    }
+    for (int i = 1; i < size; i++) {
+        if (getComponent3(data.gIds, i) != -1) {
+            indices = (int4) setComponent4(indices, getComponent3(data.gIds, i), get_global_id(i));
+        }
+    }
+    return indices;
+}
+
+int getIndex(int4 shape, int4 indices, int2 arraySizes) {
     int index = 0;
     int offset = 1;
-    for (int i = 0; i < arraySizes[1]; i++) {
-        index += indices[i] * offset;
-        if (i < arraySizes[0]) {
-            offset *= shape[i];
+    for (int i = 0; i < MAX_ARRAY_BUFFER_SIZE; i++) {
+        index += getComponent4(indices, i) * offset;
+        if (i < getComponent2(arraySizes, 0)) {
+            offset *= getComponent4(shape, i);
         }
     }
     return index;
 }
 
-void clear(int indices[]) {
-    for (int i = 0; i < MAX_ARRAY_BUFFER_SIZE; i++) {
-        indices[i] = 0;
-    }
-}
-//
-//int* getIndices(int* shape, int length, int index) {
-//    const int size = sizeof(shape) / sizeof(int);
-//    int indices[size];
-//    clear(indices);
-//    int offset = 1;
-//    for (int i = 0; i < size; i++) {
-//        indices[i] = index / offset % shape[i];
-//        offset *= shape[i];
-//    }
-//    return indices;
-//}
-
-int* buildIndices(struct DataContainer data, int j, int ballId) {
-    int size = data.sizes[1]; // 3; gIds = [1, 2, 3]
-    int indices[MAX_ARRAY_BUFFER_SIZE]; // [0, 0, 0, 0]
-    clear(indices);
-    indices[0] = j; // [j, 0, 0, 0]
-    if (data.gIds[0] != -1)
-        indices[data.gIds[0]] = ballId; // [j, ballId, 0, 0]
-    for (int i = 1; i < size; i++) { // i = 2
-        if (data.gIds[i] != -1) // 3 != -1
-            indices[data.gIds[i]] = get_global_id(i); // [j, ballId, get_global_id(1), get_global_id(2)]
-    }
-    return indices;
-}
-
 float readBallData(struct DataContainer data, int j, int ballId) {
-    const int sizes[] = {data.sizes[0], data.sizes[0]};
-    return data.data[getIndex(data.shape, buildIndices(data, j, ballId), sizes)];
+    return data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))];
 }
 
 float readData(struct DataContainer data, int j) {
@@ -89,8 +112,7 @@ float readData(struct DataContainer data, int j) {
 }
 
 void writeAbsoluteBallData(struct DataContainer data, int j, int ballId, float value) {
-    const int sizes[] = {data.sizes[0], data.sizes[0]};
-    data.data[getIndex(data.shape, buildIndices(data, j, ballId), sizes)] = value;
+    data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))] = value;
 }
 
 void writeAbsoluteData(struct DataContainer data, int j, float value) {
@@ -98,8 +120,7 @@ void writeAbsoluteData(struct DataContainer data, int j, float value) {
 }
 
 void writeBallData(struct DataContainer data, int j, int ballId, float valueOffset) {
-    const int sizes[] = {data.sizes[0], data.sizes[0]};
-    data.data[getIndex(data.shape, buildIndices(data, j, ballId), sizes)] += valueOffset;
+    data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))] += valueOffset;
 }
 
 void writeData(struct DataContainer data, int j, float valueOffset) {
@@ -127,7 +148,7 @@ float2 updatePosition(float2 position, float2 velocity, float time) {
 }
 
 float2 updateVelocity(float2 velocity, float alpha) {
-    if (length(velocity) < 0.1) {
+    if (length(velocity) < 0.1f) {
         return (float2) (0, 0);
     }
     return velocity + velocity * alpha;
@@ -156,29 +177,29 @@ void setVelocity(struct DataContainer data, float2 velocityOffset) {
 bool checkHole(struct DataContainer data, struct BoardDimensions dim, float2 position, struct DataContainer gameInformation, __global float* debug) {
     float absX = abs_(position.x);
     float absY = abs_(position.y);
-    if ((absX > dim.width / 2 - 1.75 || absX < 1.75) && absY > dim.height / 2 - 1.75) {
+    if ((absX > dim.width / 2 - 1.75f || absX < 1.75f) && absY > dim.height / 2 - 1.75f) {
         int i = get_global_id(0);
         writeAbsoluteData(data, 0, i * 3);
         writeAbsoluteData(data, 1, -dim.height / 2 - 2);
         writeAbsoluteData(data, 2, 0);
         writeAbsoluteData(data, 3, 0);
-        writeAbsoluteData(data, 4, i == 0 ? 0 : -1);
+        writeAbsoluteData(data, 4, -1);
 
         if (i == 0) {
-            writeData(gameInformation, 1, -1.2);
+            writeData(gameInformation, 1, -12);
         } else if (i < 8) {
-            writeData(gameInformation, 1, 1.1);
+            writeData(gameInformation, 1, 11);
         } else if (i > 8) {
-            writeData(gameInformation, 1, -1);
+            writeData(gameInformation, 1, -10);
         } else {
             int s = 1;
-            for (int j = 1; j < min(data.shape[1] / 2, 8); j++) {
-                if (i != j && readBallData(data, 4, j) >= 0) {
+            for (int j = 1; j < 8; j++) {
+                if (readBallData(data, 4, j) >= 0) {
                     s = -1;
                     break;
                 }
             }
-            writeAbsoluteData(data, 1, s * 1000.0f);
+            writeData(gameInformation, 1, s * 1000);
         }
         return true;
     }
@@ -214,20 +235,18 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
 
     velocityOffset = updateWallCollision(positionOffset, velocityOffset, dim);
 
-    for (int j = get_global_id(0) + 1; j < balls.shape[1]; j++) {
+    for (int j = get_global_id(0) + 1; j < getComponent4(balls.shape, 1); j++) {
         const float2 bPosition = readBallPosition(balls, j);
         const float2 bVelocity = readBallVelocity(balls, j);
         float2 bPositionOffset = bPosition;
 
         if (length(positionOffset - bPositionOffset) < 2) {
-            if (length(positionOffset - bPositionOffset) < 2) {
-                if (length(velocityOffset) > length(bVelocity)) {
-                    float2 d = (float2) positionOffset - bPositionOffset;
-                    positionOffset += d * (2 / length(d) - 1);
-                } else {
-                    float2 d = (float2) bPositionOffset - positionOffset;
-                    bPositionOffset += d * (2 / length(d) - 1);
-                }
+            if (length(velocityOffset) > length(bVelocity)) {
+                float2 d = (float2) positionOffset - bPositionOffset;
+                positionOffset += d * (2 / length(d) - 1);
+            } else {
+                float2 d = (float2) bPositionOffset - positionOffset;
+                bPositionOffset += d * (2 / length(d) - 1);
             }
 //            int contactIndicator = (int)readData(balls, 4);
 //            int contactIndicatorB = (int)readBallData(balls, 4, j);
@@ -256,58 +275,27 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
     }
     setPosition(balls, positionOffset - position);
     setVelocity(balls, velocityOffset - velocity);
-    if (isnan(length(velocityOffset))) {
-        debug[0] = 1;
-        debug[2] = velocityOffset.x;
-        debug[3] = velocityOffset.y;
-    }
     writeData(gameInformation, 0, length(velocityOffset));
-}
-
-int4 buildIndicesDebug(struct DataContainer data, int j, int ballId, __global float* debug) {
-    const int size = data.sizes[1];
-    int4 indices = (0, 0, 0, 0);
-    indices[0] = j;
-    if (data.gIds[0] != -1) {
-        debug[2] = data.gIds[0];
-        indices[data.gIds[0]] = ballId;
-    }
-    for (int i = 1; i < size; i++) {
-        if (data.gIds[i] != -1) {
-            debug[data.gIds[i] + 2] = get_global_id(i);
-            indices[data.gIds[i]] = get_global_id(i);
-        }
-    }
-    return indices;
-}
-
-int getIndexDebug(int4 shape, int4 indices, int2 arraySizes, __global float* debug) {
-    int index = 0;
-    int offset = 1;
-    debug[4] = arraySizes[1];
-    for (int i = 0; i < MAX_ARRAY_BUFFER_SIZE; i++) {
-        index += indices[i] * offset;
-        debug[5 + i] = indices[i];
-        if (i < arraySizes[0]) {
-            offset *= shape[i];
-        }
-    }
-    return index;
 }
 
 void debugIndices(int offset, int4 indices, __global float* debug) {
     for (int i = 0; i < MAX_ARRAY_BUFFER_SIZE; i++) {
-        debug[offset + i] = indices[i];
+        debug[offset + i] = getComponent4(indices, i);
     }
 }
 
 __kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
-    const int ballShape[] = {ballBufferSize, ballAmount, anglePartition, normPartition};
-    const int ballGId[] = {1, 2, 3};
-    const int ballSizes[] = {4, 3};
-    const int gameInfoShape[] = {2, anglePartition, normPartition};
-    const int gameInfoGId[] = {-1, 1, 2};
-    const int gameInfoSizes[] = {3, 3};
+    const int4 ballShape = (int4) (ballBufferSize, ballAmount, anglePartition, normPartition);
+    const int3 ballGId = (int3) (1, 2, 3);
+    const int2 ballSizes = (int2) (4, 3);
+    const int4 gameInfoShape = (int4) (2, anglePartition, normPartition, 0);
+    const int3 gameInfoGId = (int3) (-1, 1, 2);
+    const int2 gameInfoSizes = (int2) (3, 3);
+
+//
+//    const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
+//    const int3 ballGId = (int3) (1, -1, -1);
+//    const int2 ballSizes = (int2) (2, 1);
 
     struct DataContainer ballsData = {balls, ballShape, ballGId, ballSizes};
     struct DataContainer gameInfoData = {gameInformation, gameInfoShape, gameInfoGId, gameInfoSizes};
@@ -315,46 +303,69 @@ __kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, 
 
     int angle = get_global_id(1);
     int norm = get_global_id(2);
-    if (first == 1 && get_global_id(0) == 0) {
-        writeData(ballsData, 2, norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition);
-        writeData(ballsData, 3, norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300 / normPartition);
-    } else if (readData(gameInfoData, 0) == 0) {
+    if (angle != 0 || norm != 0) {
         return;
     }
-    writeAbsoluteData(gameInfoData, 0, 0);
-    if (norm == 50 && angle == 0 && get_global_id(0) == 0) {
-        int debugIndices[] = {0, 0, 0, 50};
-        int sizes[] = {4, 4};
-//        int* indicesDebug = buildIndicesDebug(ballsData, 1, 0, debug);
-//
-//        debug[0] = getIndex(ballShape, indicesDebug, sizes);
-//        writeData(gameInfoData, 1, 12);
-//        debug[1] = readData(gameInfoData, 1);
-        debug[6] = getIndex(ballShape, buildIndices(ballsData, 1, 0), sizes);
+    if (first == 1 && get_global_id(0) == 0) {
+        writeAbsoluteBallData(ballsData, 2, 0, 142.82053f);
+        writeAbsoluteBallData(ballsData, 3, 0, -203.96886f);
+
+//        writeData(ballsData, 2, norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
+//        writeData(ballsData, 3, norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
+    } else if (get_global_id(0) == 0) {
+        int4 indices = (int4) (1, 0, 0, 0);
+        int i1 = getComponent4(indices, 0);
+        indices = setComponent4(indices, 1, i1);
+        int i2 = getComponent4(indices, 1);
+        indices = setComponent4(indices, 2, i2);
+        int i3 = getComponent4(indices, 2);
+        indices = setComponent4(indices, 3, i3);
+        int i4 = getComponent4(indices, 3);
+        debug[0] = indices.x;
+        debug[1] = indices.y;
+        debug[2] = indices.z;
+        debug[3] = indices.w;
+        debug[4] = i1;
+        debug[5] = i2;
+        debug[6] = i3;
+        debug[7] = i4;
+    }
+
+    for (int j = get_global_id(0) + 1; j < getComponent4(ballsData.shape, 1); j++) {
+        for (int i = 0; i < 4; i++) {
+            int4 indices = buildIndices(ballsData, i, j);
+            if (indices.x != i || indices.y != j || indices.z != 0 || indices.w != 0) {
+                debug[4] = get_global_id(0);
+                debug[5] = j;
+                debug[6] = i;
+            }
+        }
+    }
+//    else if (readData(gameInfoData, 0) == 0) {
+//        return;
+//    }
+    if (get_global_id(0) == 0) {
+        writeAbsoluteData(gameInfoData, 0, 0);
     }
     move_(ballsData, dim, alpha, time, gameInfoData, debug);
 }
 
 __kernel void move(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
-    const int ballShape[] = {ballBufferSize, ballAmount};
-    const int ballGId[] = {1};
-    const int ballSizes[] = {2, 1};
-    const int gameInfoShape[] = {2};
-    const int gameInfoGId[] = {-1};
-    const int gameInfoSizes[] = {1, 1};
+    const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
+    const int3 ballGId = (int3) (1, -1, -1);
+    const int2 ballSizes = (int2) (2, 1);
+    const int4 gameInfoShape = (int4) (2, 0, 0, 0);
+    const int3 gameInfoGId = (int3) (-1, 0, 0);
+    const int2 gameInfoSizes = (int2) (1, 1);
 
     struct DataContainer ballsData = {balls, ballShape, ballGId, ballSizes};
     struct DataContainer gameInfoData = {gameInformation, gameInfoShape, gameInfoGId, gameInfoSizes};
     struct BoardDimensions dim = {height, width};
 
     if (get_global_id(0) == 0) {
-//        debug[0] = getIndex(ballShape, indicesDebug, sizes);
-//        writeData(gameInfoData, 1, 12);
-//        debug[1] = readData(gameInfoData, 1);
-        int sizes[] = {2, 2};
-        int4 indicesDebug = buildIndicesDebug(ballsData, 1, 0, debug);
-        debugIndices(6, indicesDebug, debug);
-//        debug[0] = getIndexDebug(ballShape, , sizes, debug);
+        float2 velocity = readVelocity(ballsData);
+        debug[9] = velocity.x;
+        debug[8] = velocity.y;
     }
     move_(ballsData, dim, alpha, time, gameInfoData, debug);
 }
@@ -363,15 +374,9 @@ __kernel void copy_buffer(__global float* ballsShort, __global float* balls, int
     int i = get_global_id(0);
     int angle = get_global_id(1);
     int norm = get_global_id(2);
-    int new_size[] = {ballBufferSize, ballAmount, anglePartition};
-    int old_size[] = {ballBufferSize};
-    int debugIndices[] = {0, i, angle, norm};
-    int newArraySizes[] = {3, 4};
-    int oldArraySizes[] = {1, 2};
     for (int j = 0; j < ballBufferSize; j++) {
-        int indices[] = {j, i, angle, norm};
-        int old_indices[] = {j, i};
-        balls[getIndex(new_size, indices, newArraySizes)] = ballsShort[getIndex(old_size, old_indices, oldArraySizes)];
+        balls[getIndex((int4) (ballBufferSize, ballAmount, anglePartition, 0), (int4) (j, i, angle, norm), (int2) (3, 4))]
+            = ballsShort[getIndex((int4) (ballBufferSize, 0, 0, 0), (int4) (j, i, 0, 0), (int2) (1, 2))];
     }
 }
 

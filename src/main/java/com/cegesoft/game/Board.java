@@ -107,6 +107,7 @@ public class Board {
         return pointer.getFloats();
     }
 
+    private int stopCounter = 0;
     public boolean everyBallStopped() {
 //        CLField<Boolean> result = new CLField<>(this.handler, CLMem.Usage.Output, Boolean.class, 1);
 //        CLFunction function = new CLFunction(this.file, "everyBallStopped", this.ballsField, this.ballBufferSizeField, result);
@@ -119,7 +120,13 @@ public class Board {
 //            }
 //        }
 //        return true;
-        return currentGameInformation[0] == 0;
+
+        if (currentGameInformation[0] != 0) {
+            stopCounter = 0;
+        } else {
+            stopCounter++;
+        }
+        return stopCounter > 20;
     }
 
     private boolean firstEmptyTick = true;
@@ -157,6 +164,7 @@ public class Board {
             if (info[1] < -height / 2 - 1) {
                 ballsField.setValue(defaultQueue, 1, 0.0f);
                 ballsField.setValue(defaultQueue, 0, INITIAL_POSITION[0]);
+                ballsField.setValue(defaultQueue, 4, 0.0f);
             }
             if (currentGameInformation[1] > 0) {
                 System.out.println("Player 1 won");

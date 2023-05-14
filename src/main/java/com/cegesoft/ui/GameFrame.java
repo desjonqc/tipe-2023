@@ -50,8 +50,8 @@ public class GameFrame extends JFrame {
                         Board.bestShot = true;
                     }
                     if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-                        float bestNorm = 261;
-                        float bestAngle = 152.9f;
+                        float bestNorm = 249;
+                        float bestAngle = 305;
                         board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
                     }
                 }
