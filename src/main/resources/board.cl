@@ -16,8 +16,6 @@ __constant int2 masks2[] = {(int2) (0xffffffff, 0),
                           (int2) (0, 0xffffffff)};
 
 
-float* debug_global;
-
 int4 setComponent4(int4 vector, int index, int value) {
     int4 mask = masks4[index];
     return (vector & ~mask) + ((int4) (value) & mask);
@@ -55,6 +53,7 @@ struct BoardDimensions {
 
 struct DataContainer {
     __global float* data;
+    __global float* debug;
     const int4 shape;
     const int3 gIds;
     const int2 sizes;
@@ -86,6 +85,12 @@ int4 buildIndices(struct DataContainer data, int j, int ballId) {
     for (int i = 1; i < size; i++) {
         if (getComponent3(data.gIds, i) != -1) {
             indices = (int4) setComponent4(indices, getComponent3(data.gIds, i), get_global_id(i));
+        }
+    }
+
+    if (getComponent3(data.gIds, 0) != -1) {
+        if (indices.x != j || indices.y != ballId || indices.z != 0 || indices.w != 0) {
+            data.debug[0] = getComponent3(data.gIds, 0);
         }
     }
     return indices;
@@ -297,49 +302,19 @@ __kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, 
 //    const int3 ballGId = (int3) (1, -1, -1);
 //    const int2 ballSizes = (int2) (2, 1);
 
-    struct DataContainer ballsData = {balls, ballShape, ballGId, ballSizes};
-    struct DataContainer gameInfoData = {gameInformation, gameInfoShape, gameInfoGId, gameInfoSizes};
+    struct DataContainer ballsData = {balls, debug, ballShape, ballGId, ballSizes};
+    struct DataContainer gameInfoData = {gameInformation, debug, gameInfoShape, gameInfoGId, gameInfoSizes};
     struct BoardDimensions dim = {height, width};
 
     int angle = get_global_id(1);
     int norm = get_global_id(2);
-    if (angle != 0 || norm != 0) {
-        return;
-    }
+
     if (first == 1 && get_global_id(0) == 0) {
-        writeAbsoluteBallData(ballsData, 2, 0, 142.82053f);
-        writeAbsoluteBallData(ballsData, 3, 0, -203.96886f);
+//        writeAbsoluteBallData(ballsData, 2, 0, 142.82053f);
+//        writeAbsoluteBallData(ballsData, 3, 0, -203.96886f);
 
-//        writeData(ballsData, 2, norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
-//        writeData(ballsData, 3, norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
-    } else if (get_global_id(0) == 0) {
-        int4 indices = (int4) (1, 0, 0, 0);
-        int i1 = getComponent4(indices, 0);
-        indices = setComponent4(indices, 1, i1);
-        int i2 = getComponent4(indices, 1);
-        indices = setComponent4(indices, 2, i2);
-        int i3 = getComponent4(indices, 2);
-        indices = setComponent4(indices, 3, i3);
-        int i4 = getComponent4(indices, 3);
-        debug[0] = indices.x;
-        debug[1] = indices.y;
-        debug[2] = indices.z;
-        debug[3] = indices.w;
-        debug[4] = i1;
-        debug[5] = i2;
-        debug[6] = i3;
-        debug[7] = i4;
-    }
-
-    for (int j = get_global_id(0) + 1; j < getComponent4(ballsData.shape, 1); j++) {
-        for (int i = 0; i < 4; i++) {
-            int4 indices = buildIndices(ballsData, i, j);
-            if (indices.x != i || indices.y != j || indices.z != 0 || indices.w != 0) {
-                debug[4] = get_global_id(0);
-                debug[5] = j;
-                debug[6] = i;
-            }
-        }
+        writeData(ballsData, 2, norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
+        writeData(ballsData, 3, norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
     }
 //    else if (readData(gameInfoData, 0) == 0) {
 //        return;
@@ -358,8 +333,8 @@ __kernel void move(__global float* balls, int ballBufferSize, int ballAmount, fl
     const int3 gameInfoGId = (int3) (-1, 0, 0);
     const int2 gameInfoSizes = (int2) (1, 1);
 
-    struct DataContainer ballsData = {balls, ballShape, ballGId, ballSizes};
-    struct DataContainer gameInfoData = {gameInformation, gameInfoShape, gameInfoGId, gameInfoSizes};
+    struct DataContainer ballsData = {balls, debug, ballShape, ballGId, ballSizes};
+    struct DataContainer gameInfoData = {gameInformation, debug, gameInfoShape, gameInfoGId, gameInfoSizes};
     struct BoardDimensions dim = {height, width};
 
     if (get_global_id(0) == 0) {

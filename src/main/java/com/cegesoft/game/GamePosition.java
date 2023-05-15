@@ -20,8 +20,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GamePosition {
-    private final static int ANGLE_PARTITION = 1;
-    private final static int NORM_PARTITION = 1;
+    private final static int ANGLE_PARTITION = 360;
+    private final static int NORM_PARTITION = 100;
 
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;
@@ -76,31 +76,19 @@ public class GamePosition {
     }
 
     public List<Integer> move(GameFrame.GamePanel panel, GameFrame frame) {
-//        panel.setBallInformationFunction(i -> this.getBallInformation(305 * ANGLE_PARTITION / 360, 249 * NORM_PARTITION / 300, i));
-        panel.setBallInformationFunction(i -> this.getBallInformation(0, 0, i));
 
-        for (int i = 0; i < 6000; i++) {
+        for (int i = 0; i < 7000; i++) {
             if (i == 1) {
                 this.function.setArgument(11, new CLField<>(this.board.getHandler(), Short.class, (short) 0));
             }
             this.function.call(this.queue, new int[] {this.board.getBallsAmount(), ANGLE_PARTITION, NORM_PARTITION}).waitFor();
-            frame.repaint();
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         this.function.setArgument(11, new CLField<>(this.board.getHandler(), Short.class, (short) 1));
 
-        panel.setBallInformationFunction(null);
         this.currentGameInformation = this.getGamesInformation();
-//        return IntStream.range(0, ANGLE_PARTITION * NORM_PARTITION).boxed().collect(Collectors.toList());
         IntStream stream = IntStream.range(0, ANGLE_PARTITION * NORM_PARTITION);
-        return stream.boxed().sorted((o1, o2) -> {
-                        return -Float.compare(this.currentGameInformation[o1 * Board.GAME_DATA_SIZE + 1], this.currentGameInformation[o2 * Board.GAME_DATA_SIZE + 1]);
-                })
+        return stream.boxed().sorted((o1, o2) -> -Float.compare(this.currentGameInformation[o1 * Board.GAME_DATA_SIZE + 1], this.currentGameInformation[o2 * Board.GAME_DATA_SIZE + 1]))
                 .collect(Collectors.toList());
     }
 
