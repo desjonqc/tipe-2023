@@ -15,6 +15,10 @@ public class CLFunction {
         this.file = file;
         this.fields = fields;
         this.kernel = file.getProgram().createKernel(name);
+        this.updateArgs();
+    }
+
+    private void updateArgs() {
         Object[] args = new Object[fields.length];
         for (int i = 0; i < fields.length; i++) {
             args[i] = fields[i].getArgument();
@@ -32,5 +36,10 @@ public class CLFunction {
             return null;
         CLBuffer<T> buffer = (CLBuffer<T>) field.getArgument();
         return buffer.read(queue, eventsToWait);
+    }
+
+    public <T> void setArgument(int i, CLField<T> field) {
+        fields[i] = field;
+        this.updateArgs();
     }
 }

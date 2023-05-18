@@ -2,12 +2,18 @@ package com.cegesoft.ui;
 
 import com.cegesoft.Main;
 import com.cegesoft.game.Board;
+import com.cegesoft.game.GamePosition;
 import org.bridj.Pointer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class GameFrame extends JFrame {
 
@@ -31,8 +37,30 @@ public class GameFrame extends JFrame {
 
     public class GamePanel extends JPanel {
 
+        private Function<Integer, float[]> ballInformationFunction;
 
         public GamePanel() {
+            GameFrame.this.addKeyListener(new java.awt.event.KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                public void keyPressed(java.awt.event.KeyEvent evt) {
+                    if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
+                        Board.bestShot = true;
+                    }
+                    if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                        float bestNorm = 249;
+                        float bestAngle = 305;
+                        board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+
+                }
+            });
             this.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -41,10 +69,7 @@ public class GameFrame extends JFrame {
                         float[] info = board.getBallInformation(0);
                         float vx = (e.getX() - middleX - info[0] * scale) * 5 / scale;
                         float vy = (e.getY() - middleY - info[1] * scale) * 5 / scale;
-                        Pointer<Float> pointer = board.getBallsBuffer().read(board.getDefaultQueue());
-                        pointer.set(2, vx);
-                        pointer.set(3, vy);
-                        board.getBallsBuffer().write(board.getDefaultQueue(), pointer, false).waitFor();
+                        board.setBallVelocity(0, vx, vy);
                     }
                 }
 
@@ -68,6 +93,7 @@ public class GameFrame extends JFrame {
 
                 }
             });
+
         }
         @Override
         public void paint(Graphics g) {
@@ -97,11 +123,11 @@ public class GameFrame extends JFrame {
                     new Color(0, 0, 0)
             };
             for (int i = 0; i < board.getBallsAmount(); i++) {
-                float[] info = board.getBallInformation(i);
+                float[] info = this.ballInformationFunction == null ? board.getBallInformation(i) : this.ballInformationFunction.apply(i);
                 if (i == 0)
                     g.setColor(Color.WHITE);
                 else
-                    g.setColor(info[4] == 0 ? ballColors[(i - 1) % 8] : Color.BLUE);
+                    g.setColor(info[4] <= 0 ? ballColors[(i - 1) % 8] : Color.BLUE);
                 g.fillOval((int) (info[0] * scale - scale) + middleX, (int)(info[1] * scale - scale) + middleY, (int)(2 * scale), (int) (2 * scale));
                 if (i >= 8) {
                     g.setColor(Color.WHITE);
@@ -112,6 +138,10 @@ public class GameFrame extends JFrame {
                 if (i > 0)
                     g.drawString(String.valueOf(i), (int) (info[0] * scale - scale / (i < 10 ? 3 : 1.5)) + middleX, (int) (info[1] * scale + scale / 2) + middleY);
             }
+        }
+
+        public void setBallInformationFunction(Function<Integer, float[]> function) {
+            this.ballInformationFunction = function;
         }
     }
 }
