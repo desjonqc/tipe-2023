@@ -15,6 +15,11 @@ __constant int3 masks3[] = {(int3) (0xffffffff, 0, 0),
 __constant int2 masks2[] = {(int2) (0xffffffff, 0),
                           (int2) (0, 0xffffffff)};
 
+__constant uint TYPE_SINGLE_SIM_BALLS = 0;
+__constant uint TYPE_SINGLE_SIM_INFO = 1;
+__constant uint TYPE_MULTI_SIM_BALLS = 2;
+__constant uint TYPE_MULTI_SIM_INFO = 3;
+
 
 int4 setComponent4(int4 vector, int index, int value) {
     int4 mask = masks4[index];
@@ -53,10 +58,10 @@ struct BoardDimensions {
 
 struct DataContainer {
     __global float* data;
+    __global float* edit;
     __global float* debug;
     const int4 shape;
-    const int3 gIds;
-    const int2 sizes;
+    const uint type;
 };
 
 
@@ -74,42 +79,22 @@ float abs_(float f) {
     return f;
 }
 
-
-int4 buildIndices(struct DataContainer data, int j, int ballId) {
-    const int size = getComponent2(data.sizes, 1);
-
-    int4 indices = (int4) (j, 0, 0, 0);
-    if (getComponent3(data.gIds, 0) != -1) {
-        indices = (int4) setComponent4(indices, getComponent3(data.gIds, 0), ballId);
+int getIndex(struct DataContainer data, int j, int ballId) {
+    if (data.type == TYPE_SINGLE_SIM_BALLS) {
+        return j + data.shape.x * ballId;
+    } else if (data.type == TYPE_SINGLE_SIM_INFO) {
+        return j;
+    } else if (data.type == TYPE_MULTI_SIM_BALLS) {
+        return j + data.shape.x * ballId + data.shape.x * data.shape.y * get_global_id(1)
+            + data.shape.x * data.shape.y * data.shape.z * get_global_id(2);
+    } else if (data.type == TYPE_MULTI_SIM_INFO) {
+        return j + data.shape.x * get_global_id(1) + data.shape.x * data.shape.y * get_global_id(2);
     }
-    for (int i = 1; i < size; i++) {
-        if (getComponent3(data.gIds, i) != -1) {
-            indices = (int4) setComponent4(indices, getComponent3(data.gIds, i), get_global_id(i));
-        }
-    }
-
-    if (getComponent3(data.gIds, 0) != -1) {
-        if (indices.x != j || indices.y != ballId || indices.z != 0 || indices.w != 0) {
-            data.debug[0] = getComponent3(data.gIds, 0);
-        }
-    }
-    return indices;
-}
-
-int getIndex(int4 shape, int4 indices, int2 arraySizes) {
-    int index = 0;
-    int offset = 1;
-    for (int i = 0; i < MAX_ARRAY_BUFFER_SIZE; i++) {
-        index += getComponent4(indices, i) * offset;
-        if (i < getComponent2(arraySizes, 0)) {
-            offset *= getComponent4(shape, i);
-        }
-    }
-    return index;
+    return 0;
 }
 
 float readBallData(struct DataContainer data, int j, int ballId) {
-    return data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))];
+    return data.data[getIndex(data, j, ballId)];
 }
 
 float readData(struct DataContainer data, int j) {
@@ -117,7 +102,7 @@ float readData(struct DataContainer data, int j) {
 }
 
 void writeAbsoluteBallData(struct DataContainer data, int j, int ballId, float value) {
-    data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))] = value;
+    data.edit[getIndex(data, j, ballId)] = value;
 }
 
 void writeAbsoluteData(struct DataContainer data, int j, float value) {
@@ -125,7 +110,7 @@ void writeAbsoluteData(struct DataContainer data, int j, float value) {
 }
 
 void writeBallData(struct DataContainer data, int j, int ballId, float valueOffset) {
-    data.data[getIndex(data.shape, buildIndices(data, j, ballId), (int2) (getComponent2(data.sizes, 0)))] += valueOffset;
+    data.edit[getIndex(data, j, ballId)] += valueOffset;
 }
 
 void writeData(struct DataContainer data, int j, float valueOffset) {
@@ -165,8 +150,8 @@ void setBallPosition(struct DataContainer data, int ballId, float2 positionOffse
 }
 
 void setPosition(struct DataContainer data, float2 positionOffset) {
-    writeData(data, 0, positionOffset.x);
-    writeData(data, 1, positionOffset.y);
+    writeAbsoluteData(data, 0, positionOffset.x);
+    writeAbsoluteData(data, 1, positionOffset.y);
 }
 
 void setBallVelocity(struct DataContainer data, int ballId, float2 velocityOffset) {
@@ -175,8 +160,8 @@ void setBallVelocity(struct DataContainer data, int ballId, float2 velocityOffse
 }
 
 void setVelocity(struct DataContainer data, float2 velocityOffset) {
-    writeData(data, 2, velocityOffset.x);
-    writeData(data, 3, velocityOffset.y);
+    writeAbsoluteData(data, 2, velocityOffset.x);
+    writeAbsoluteData(data, 3, velocityOffset.y);
 }
 
 bool checkHole(struct DataContainer data, struct BoardDimensions dim, float2 position, struct DataContainer gameInformation, __global float* debug) {
@@ -225,14 +210,57 @@ float2 updateWallCollision(float2 position, float2 velocity, struct BoardDimensi
 }
 
 void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, float time, struct DataContainer gameInformation, __global float* debug) {
-    if (readData(balls, 4) == -1) {
-        return;
-    }
+//    if (readData(balls, 4) == -1) {
+//        writeAbsoluteData(balls, 4, -1);
+//        return;
+//    }
     const float2 position = readPosition(balls);
     const float2 velocity = readVelocity(balls);
 
-    float2 positionOffset = updatePosition(position, velocity, time);
-    float2 velocityOffset = updateVelocity(velocity, alpha);
+    float2 positionOffset = position;
+    float2 velocityOffset = velocity;
+    for (int j = 0; j < getComponent4(balls.shape, 1); j++) {
+        if (j == get_global_id(0)) {
+            continue;
+        }
+        const float2 bPosition = readBallPosition(balls, j);
+        const float2 bVelocity = readBallVelocity(balls, j);
+        if (get_global_id(0) == 0 && j == 1) {
+            debug[11] = positionOffset.x;
+            debug[12] = positionOffset.y;
+            debug[13] = bPosition.x;
+            debug[14] = bPosition.y;
+        }
+        if (length(positionOffset - bPosition) <= 2) {
+            float2 d = (float2) positionOffset - bPosition;
+            positionOffset += d * (2 / length(d) - 1);
+
+            float2 delta = (positionOffset - bPosition) / 2;
+
+            float dot1to2 = dot(velocityOffset, delta);
+            float dot2to1 = dot(bVelocity, delta);
+
+            velocityOffset += delta * (dot2to1 - dot1to2);
+            if (get_global_id(0) == 1 && j == 0) {
+                debug[0] = 5;
+                debug[1] = velocityOffset.x;
+                debug[2] = velocityOffset.y;
+                debug[3] = delta.x;
+                debug[4] = delta.y;
+                debug[5] = dot1to2;
+                debug[6] = dot2to1;
+            }
+        }
+        if (get_global_id(0) == 1 && j == 0) {
+            debug[7] = positionOffset.x;
+            debug[8] = positionOffset.y;
+            debug[9] = bPosition.x;
+            debug[10] = bPosition.y;
+        }
+    }
+
+    positionOffset = updatePosition(positionOffset, velocityOffset, time);
+    velocityOffset = updateVelocity(velocityOffset, alpha);
 
     if (checkHole(balls, dim, position, gameInformation, debug)) {
         return;
@@ -240,46 +268,8 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
 
     velocityOffset = updateWallCollision(positionOffset, velocityOffset, dim);
 
-    for (int j = get_global_id(0) + 1; j < getComponent4(balls.shape, 1); j++) {
-        const float2 bPosition = readBallPosition(balls, j);
-        const float2 bVelocity = readBallVelocity(balls, j);
-        float2 bPositionOffset = bPosition;
-
-        if (length(positionOffset - bPositionOffset) < 2) {
-            if (length(velocityOffset) > length(bVelocity)) {
-                float2 d = (float2) positionOffset - bPositionOffset;
-                positionOffset += d * (2 / length(d) - 1);
-            } else {
-                float2 d = (float2) bPositionOffset - positionOffset;
-                bPositionOffset += d * (2 / length(d) - 1);
-            }
-//            int contactIndicator = (int)readData(balls, 4);
-//            int contactIndicatorB = (int)readBallData(balls, 4, j);
-//
-//            writeAbsoluteData(balls, 4, contactIndicator | ((int)pow(2.0f, j)));
-//            writeAbsoluteBallData(balls, 4, j, contactIndicatorB | ((int)pow(2.0f, get_global_id(0))));
-
-            float2 delta = (positionOffset - bPositionOffset) / 2;
-
-            float dot1to2 = dot(velocityOffset, delta);
-            float dot2to1 = dot(bVelocity, delta);
-
-            velocityOffset += delta * (dot2to1 - dot1to2);
-
-            setBallVelocity(balls, j, delta * (dot1to2 - dot2to1));
-
-            setBallPosition(balls, j, bPositionOffset - bPosition);
-
-        } else {
-//            int contactIndicator = (int)readData(balls, 4);
-//            int contactIndicatorB = (int)readBallData(balls, 4, j);
-//
-//            writeAbsoluteData(balls, 4, contactIndicator & (~((int)pow(2.0f, j))));
-//            writeAbsoluteBallData(balls, 4, j, contactIndicatorB & (~((int)pow(2.0f, get_global_id(0)))));
-        }
-    }
-    setPosition(balls, positionOffset - position);
-    setVelocity(balls, velocityOffset - velocity);
+    setPosition(balls, positionOffset);
+    setVelocity(balls, velocityOffset);
     writeData(gameInformation, 0, length(velocityOffset));
 }
 
@@ -289,59 +279,41 @@ void debugIndices(int offset, int4 indices, __global float* debug) {
     }
 }
 
-__kernel void move_2(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
+__kernel void move_2(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
     const int4 ballShape = (int4) (ballBufferSize, ballAmount, anglePartition, normPartition);
-    const int3 ballGId = (int3) (1, 2, 3);
-    const int2 ballSizes = (int2) (4, 3);
     const int4 gameInfoShape = (int4) (2, anglePartition, normPartition, 0);
-    const int3 gameInfoGId = (int3) (-1, 1, 2);
-    const int2 gameInfoSizes = (int2) (3, 3);
 
-//
-//    const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
-//    const int3 ballGId = (int3) (1, -1, -1);
-//    const int2 ballSizes = (int2) (2, 1);
-
-    struct DataContainer ballsData = {balls, debug, ballShape, ballGId, ballSizes};
-    struct DataContainer gameInfoData = {gameInformation, debug, gameInfoShape, gameInfoGId, gameInfoSizes};
+    struct DataContainer ballsData = {balls, editBalls, debug, ballShape, TYPE_MULTI_SIM_BALLS};
+    struct DataContainer gameInfoData = {gameInformation, gameInformation, debug, gameInfoShape, TYPE_MULTI_SIM_INFO};
     struct BoardDimensions dim = {height, width};
 
     int angle = get_global_id(1);
     int norm = get_global_id(2);
 
-    if (first == 1 && get_global_id(0) == 0) {
-//        writeAbsoluteBallData(ballsData, 2, 0, 142.82053f);
-//        writeAbsoluteBallData(ballsData, 3, 0, -203.96886f);
-
-        writeData(ballsData, 2, norm * cos((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
-        writeData(ballsData, 3, norm * sin((float) angle * 2 * M_PI_F / anglePartition) * 300.0f / normPartition);
+    if (first == 1) {
+        float2 position = readPosition(ballsData);
+        float2 velocity = readVelocity(ballsData);
+        if (get_global_id(0) == 0) {
+            velocity = ((float2) (cos((float) angle * 2 * M_PI_F / anglePartition), sin((float) angle * 2 * M_PI_F / anglePartition))) * norm * 300.0f / normPartition;
+        }
+        setPosition(ballsData, position);
+        setVelocity(ballsData, velocity);
+        return;
     }
-//    else if (readData(gameInfoData, 0) == 0) {
-//        return;
-//    }
     if (get_global_id(0) == 0) {
         writeAbsoluteData(gameInfoData, 0, 0);
     }
     move_(ballsData, dim, alpha, time, gameInfoData, debug);
 }
 
-__kernel void move(__global float* balls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
+__kernel void move(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
     const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
-    const int3 ballGId = (int3) (1, -1, -1);
-    const int2 ballSizes = (int2) (2, 1);
     const int4 gameInfoShape = (int4) (2, 0, 0, 0);
-    const int3 gameInfoGId = (int3) (-1, 0, 0);
-    const int2 gameInfoSizes = (int2) (1, 1);
 
-    struct DataContainer ballsData = {balls, debug, ballShape, ballGId, ballSizes};
-    struct DataContainer gameInfoData = {gameInformation, debug, gameInfoShape, gameInfoGId, gameInfoSizes};
+    struct DataContainer ballsData = {balls, editBalls, debug, ballShape, TYPE_SINGLE_SIM_BALLS};
+    struct DataContainer gameInfoData = {gameInformation, gameInformation, debug, gameInfoShape, TYPE_SINGLE_SIM_INFO};
     struct BoardDimensions dim = {height, width};
 
-    if (get_global_id(0) == 0) {
-        float2 velocity = readVelocity(ballsData);
-        debug[9] = velocity.x;
-        debug[8] = velocity.y;
-    }
     move_(ballsData, dim, alpha, time, gameInfoData, debug);
 }
 
@@ -349,9 +321,11 @@ __kernel void copy_buffer(__global float* ballsShort, __global float* balls, int
     int i = get_global_id(0);
     int angle = get_global_id(1);
     int norm = get_global_id(2);
+    struct DataContainer previousContainer = {ballsShort, ballsShort, debug, (int4) (ballBufferSize, 0, 0, 0), TYPE_SINGLE_SIM_BALLS};
+    struct DataContainer currentContainer = {balls, balls, debug, (int4) (ballBufferSize, ballAmount, anglePartition, 0), TYPE_MULTI_SIM_BALLS};
     for (int j = 0; j < ballBufferSize; j++) {
-        balls[getIndex((int4) (ballBufferSize, ballAmount, anglePartition, 0), (int4) (j, i, angle, norm), (int2) (3, 4))]
-            = ballsShort[getIndex((int4) (ballBufferSize, 0, 0, 0), (int4) (j, i, 0, 0), (int2) (1, 2))];
+        balls[getIndex(currentContainer, j, i)]
+            = ballsShort[getIndex(previousContainer, j, i)];
     }
 }
 

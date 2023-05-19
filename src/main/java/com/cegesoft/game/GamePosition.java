@@ -5,6 +5,7 @@ import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;
 import com.cegesoft.util.NDArrayUtil;
+import com.cegesoft.util.ProgressBar;
 import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLEvent;
 import com.nativelibs4java.opencl.CLMem;
@@ -20,14 +21,15 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GamePosition {
-    private final static int ANGLE_PARTITION = 360;
+    private final static int ANGLE_PARTITION = 3600;
     private final static int NORM_PARTITION = 100;
 
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;
     private final CLField<Integer> anglesField;
     private final CLField<Integer> normField;
-    private final CLField<Float> ballsField;
+    private CLField<Float> ballsField;
+    private CLField<Float> editBallsField;
     private final CLField<Float> gamesInformationField;
     private float[] currentGameInformation = new float[Board.GAME_DATA_SIZE * ANGLE_PARTITION * NORM_PARTITION];
     private final CLQueue queue;
@@ -40,9 +42,10 @@ public class GamePosition {
         this.anglesField = new CLField<>(board.getHandler(), Integer.class, ANGLE_PARTITION);
         this.normField = new CLField<>(board.getHandler(), Integer.class, NORM_PARTITION);
         this.ballsField = new CLField<>(board.getHandler(), CLMem.Usage.InputOutput, Float.class,  ((long) this.board.getBallsAmount() * Board.BALL_BUFFER_SIZE) * ANGLE_PARTITION * NORM_PARTITION);
+        this.editBallsField = new CLField<>(board.getHandler(), CLMem.Usage.InputOutput, Float.class,  ((long) this.board.getBallsAmount() * Board.BALL_BUFFER_SIZE) * ANGLE_PARTITION * NORM_PARTITION);
         this.gamesInformationField = new CLField<>(board.getHandler(), CLMem.Usage.InputOutput, Float.class, (long) Board.GAME_DATA_SIZE * ANGLE_PARTITION * NORM_PARTITION);
         this.init(ballsField);
-        this.function = new CLFunction(board.getFile(), "move_2", this.ballsField, board.getBallBufferSizeField(), board.getBallsAmountField(), board.getAlphaField(), board.getHeightField(), board.getWidthField(), board.getTimeStepField(), this.gamesInformationField, board.getDebugField(), anglesField, normField, new CLField<>(board.getHandler(), Short.class, (short) 1));
+        this.function = new CLFunction(board.getFile(), "move_2", this.ballsField, this.editBallsField, board.getBallBufferSizeField(), board.getBallsAmountField(), board.getAlphaField(), board.getHeightField(), board.getWidthField(), board.getTimeStepField(), this.gamesInformationField, board.getDebugField(), anglesField, normField, new CLField<>(board.getHandler(), Short.class, (short) 1));
         this.BALL_DATA_SHAPE = new int[] {Board.BALL_BUFFER_SIZE, this.board.getBallsAmount(), ANGLE_PARTITION, NORM_PARTITION};
         this.GAME_DATA_SHAPE = new int[] {Board.GAME_DATA_SIZE, ANGLE_PARTITION, NORM_PARTITION};
     }
@@ -66,6 +69,12 @@ public class GamePosition {
         return info;
     }
 
+    private void invertEdit() {
+        CLField<Float> temp = this.ballsField;
+        this.ballsField = this.editBallsField;
+        this.editBallsField = temp;
+    }
+
     private Stream<Float> streamValues(CLField<?> field) {
         float[] values = ((CLBuffer<Float>) field.getArgument()).read(this.queue).getFloats();
         Float[] pFloat = new Float[values.length];
@@ -79,12 +88,16 @@ public class GamePosition {
 
         for (int i = 0; i < 7000; i++) {
             if (i == 1) {
-                this.function.setArgument(11, new CLField<>(this.board.getHandler(), Short.class, (short) 0));
+                this.function.setArgument(12, new CLField<>(this.board.getHandler(), Short.class, (short) 0));
             }
             this.function.call(this.queue, new int[] {this.board.getBallsAmount(), ANGLE_PARTITION, NORM_PARTITION}).waitFor();
+            this.invertEdit();
+            this.function.setArgument(0, this.ballsField);
+            this.function.setArgument(1, this.editBallsField);
+            ProgressBar.printProgress(i, 7000);
         }
 
-        this.function.setArgument(11, new CLField<>(this.board.getHandler(), Short.class, (short) 1));
+        this.function.setArgument(12, new CLField<>(this.board.getHandler(), Short.class, (short) 1));
 
         this.currentGameInformation = this.getGamesInformation();
         IntStream stream = IntStream.range(0, ANGLE_PARTITION * NORM_PARTITION);

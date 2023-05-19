@@ -47,6 +47,24 @@ public class GameFrame extends JFrame {
 
                 public void keyPressed(java.awt.event.KeyEvent evt) {
                     if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
+                        Thread thread = new Thread(() -> {
+                            System.out.println("Calculating best shot...");
+                            long start = System.currentTimeMillis();
+                            GamePosition position = new GamePosition(board, board.getBallsField(), board.getDefaultQueue());
+                            List<Integer> betterAngles = position.move(GamePanel.this, GameFrame.this);
+                            int bestShot = betterAngles.get(0);
+                            float bestAngle = position.getAngle(bestShot);
+                            float bestScore = position.getScore(bestShot);
+                            float bestNorm = position.getNorm(bestShot);
+                            System.out.println("Angle : " + bestAngle);
+                            System.out.println("Norme : " + bestNorm);
+                            System.out.println("Score : " + bestScore);
+                            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
+
+                            board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+                            Board.bestShot = false;
+                        }, "PLAY-RESEARCH");
+                        thread.start();
                         Board.bestShot = true;
                     }
                     if (evt.getKeyCode() == KeyEvent.VK_ENTER) {

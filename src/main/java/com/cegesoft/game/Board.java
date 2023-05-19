@@ -46,8 +46,8 @@ public class Board {
     private final float alpha = -0.0012f;
     private final float height, width;
     private final CLField<Float> alphaField, heightField, widthField;
-    private final CLField<Float> ballsField;
-    private final CLBuffer<Float> ballsBuffer;
+    private CLField<Float> ballsField;
+    private CLField<Float> editBallsField;
     private final int ballsAmount;
     private final CLField<Integer> ballsAmountField;
     private final CLQueue defaultQueue;
@@ -67,7 +67,7 @@ public class Board {
         this.defaultQueue = handler.createQueue();
         this.file = new CLFile("board.cl", handler.getContext());
         this.ballsField = new CLField<>(handler, CLMem.Usage.InputOutput, Float.class, (long) ballsAmount * BALL_BUFFER_SIZE);
-        this.ballsBuffer = (CLBuffer<Float>) this.ballsField.getArgument();
+        this.editBallsField = new CLField<>(handler, CLMem.Usage.InputOutput, Float.class, (long) ballsAmount * BALL_BUFFER_SIZE);
         this.ballsAmount = ballsAmount;
         this.ballBufferSizeField = new CLField<>(this.handler, Integer.class, BALL_BUFFER_SIZE);
         this.timeStepField = new CLField<>(this.handler, Float.class, TIME_STEP);
@@ -75,26 +75,26 @@ public class Board {
         this.heightField = new CLField<>(this.handler, Float.class, this.height);
         this.widthField = new CLField<>(this.handler, Float.class, this.width);
         this.ballsAmountField = new CLField<>(this.handler, Integer.class, this.ballsAmount);
-        this.debugField = new CLField<>(handler, CLMem.Usage.InputOutput, Float.class, 10);
+        this.debugField = new CLField<>(handler, CLMem.Usage.InputOutput, Float.class, 20);
         this.gameInformationField = new CLField<>(handler, CLMem.Usage.InputOutput, Float.class, GAME_DATA_SIZE);
     }
 
     public void initialise(float[] positions) {
-        Pointer<Float> pointer = this.ballsBuffer.read(defaultQueue);
+        Pointer<Float> pointer = ((CLBuffer<Float>) this.ballsField.getArgument()).read(defaultQueue);
         for (int i = 0; i < ballsAmount; i ++) {
             pointer.set((long) i * BALL_BUFFER_SIZE, positions[4 * i]);
             pointer.set((long) i * BALL_BUFFER_SIZE + 1, positions[4 * i + 1]);
             pointer.set((long) i * BALL_BUFFER_SIZE + 2, positions[4 * i + 2]);
             pointer.set((long) i * BALL_BUFFER_SIZE + 3, positions[4 * i + 3]);
         }
-        this.ballsBuffer.write(defaultQueue, pointer, false).waitFor();
+        ((CLBuffer<Float>) this.ballsField.getArgument()).write(defaultQueue, pointer, false).waitFor();
 
-        this.moveFunction = new CLFunction(this.file, "move", this.ballsField, this.ballBufferSizeField, this.ballsAmountField,
+        this.moveFunction = new CLFunction(this.file, "move", this.ballsField, this.editBallsField, this.ballBufferSizeField, this.ballsAmountField,
                 this.alphaField, this.heightField, this.widthField, this.timeStepField, this.gameInformationField, this.debugField);
     }
 
     public float[] getBallInformation(int i) {
-        Pointer<Float> pointer = this.ballsBuffer.read(defaultQueue);
+        Pointer<Float> pointer = ((CLBuffer<Float>) this.ballsField.getArgument()).read(defaultQueue);
         float[] info = new float[BALL_BUFFER_SIZE];
         for (int j = 0; j < BALL_BUFFER_SIZE; j++) {
             info[j] = pointer.get((long) i * BALL_BUFFER_SIZE + j);
@@ -107,20 +107,14 @@ public class Board {
         return pointer.getFloats();
     }
 
+    private void invertEdit() {
+        CLField<Float> temp = this.ballsField;
+        this.ballsField = this.editBallsField;
+        this.editBallsField = temp;
+    }
+
     private int stopCounter = 0;
     public boolean everyBallStopped() {
-//        CLField<Boolean> result = new CLField<>(this.handler, CLMem.Usage.Output, Boolean.class, 1);
-//        CLFunction function = new CLFunction(this.file, "everyBallStopped", this.ballsField, this.ballBufferSizeField, result);
-//        function.call(this.defaultQueue, new int[] {this.ballsAmount});
-//        return !function.<Boolean>getOutput(2, this.defaultQueue).get(0);
-//        for (int i = 0; i < this.ballsAmount; i++) {
-//            float[] info = getBallInformation(i);
-//            if (info[2] != 0 || info[3] != 0) {
-//                return false;
-//            }
-//        }
-//        return true;
-
         if (currentGameInformation[0] != 0) {
             stopCounter = 0;
         } else {
@@ -133,26 +127,15 @@ public class Board {
     public static boolean bestShot = false;
     public void tick(GameFrame frame) {
         if (bestShot) {
-            bestShot = false;
-            System.out.println("Calculating best shot...");
-            long start = System.currentTimeMillis();
-            GamePosition position = new GamePosition(this, this.getBallsField(), this.getDefaultQueue());
-            List<Integer> betterAngles = position.move((GameFrame.GamePanel) frame.getContentPane(), frame);
-            int bestShot = betterAngles.get(0);
-            float bestAngle = position.getAngle(bestShot);
-            float bestScore = position.getScore(bestShot);
-            float bestNorm = position.getNorm(bestShot);
-            System.out.println("Angle : " + bestAngle);
-            System.out.println("Norme : " + bestNorm);
-            System.out.println("Score : " + bestScore);
-            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
-
-            this.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+            return;
         }
         if (!everyBallStopped()) {
             Main.count ++;
             this.gameInformationField.setValue(this.defaultQueue, 0L, 0f).waitFor();
             this.moveFunction.call(this.defaultQueue, new int[] {this.ballsAmount}).waitFor();
+            invertEdit();
+            this.moveFunction.setArgument(0, this.ballsField);
+            this.moveFunction.setArgument(1, this.editBallsField);
             currentGameInformation = getGameInformation();
             frame.repaint();
             firstEmptyTick = true;
@@ -186,10 +169,6 @@ public class Board {
 
     public float getWidth() {
         return width;
-    }
-
-    public CLBuffer<Float> getBallsBuffer() {
-        return ballsBuffer;
     }
 
     public CLQueue getDefaultQueue() {
@@ -241,10 +220,10 @@ public class Board {
     }
 
     public void setBallVelocity(int i, float vx, float vy) {
-        Pointer<Float> pointer = this.getBallsBuffer().read(this.getDefaultQueue());
+        Pointer<Float> pointer = ((CLBuffer<Float>)this.ballsField.getArgument()).read(this.getDefaultQueue());
         pointer.set((long) i * BALL_BUFFER_SIZE + 2, vx);
         pointer.set((long) i * BALL_BUFFER_SIZE + 3, vy);
         this.getCurrentGameInformation()[0] = (float) Math.sqrt(vx * vx + vy * vy);
-        this.getBallsBuffer().write(this.getDefaultQueue(), pointer, false).waitFor();
+        ((CLBuffer<Float>)this.ballsField.getArgument()).write(this.getDefaultQueue(), pointer, false).waitFor();
     }
 }
