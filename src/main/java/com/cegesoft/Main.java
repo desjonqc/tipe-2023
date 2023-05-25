@@ -29,8 +29,12 @@ public class Main {
     public static void main(String[] args) throws IOException {
         CLHandler handler = new CLHandler();
 
+        // 57.2e-3 -> 1
+        // 2.8 -> 2.8/57.2e-3 = 49
+        // 1.4 -> 1.4/57.2e-3 = 24
+
         // Création du billard
-        Board board = new Board(handler, 50, 100, 16);
+        Board board = new Board(handler, 48, 98, 16);
         board.initialise(Board.INITIAL_POSITION);
 
         // Création de la fenêtre

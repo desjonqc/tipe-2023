@@ -170,7 +170,7 @@ bool checkHole(struct DataContainer data, struct BoardDimensions dim, float2 pos
     if ((absX > dim.width / 2 - 1.75f || absX < 1.75f) && absY > dim.height / 2 - 1.75f) {
         int i = get_global_id(0);
         writeAbsoluteData(data, 0, i * 3);
-        writeAbsoluteData(data, 1, -dim.height / 2 - 2);
+        writeAbsoluteData(data, 1, -dim.height / 2 - 5);
         writeAbsoluteData(data, 2, 0);
         writeAbsoluteData(data, 3, 0);
         writeAbsoluteData(data, 4, -1);
@@ -210,10 +210,14 @@ float2 updateWallCollision(float2 position, float2 velocity, struct BoardDimensi
 }
 
 void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, float time, struct DataContainer gameInformation, __global float* debug) {
-//    if (readData(balls, 4) == -1) {
-//        writeAbsoluteData(balls, 4, -1);
-//        return;
-//    }
+    if (readData(balls, 4) == -1) {
+        writeAbsoluteData(balls, 4, -1);
+        writeAbsoluteData(balls, 0, readData(balls, 0));
+        writeAbsoluteData(balls, 1, readData(balls, 1));
+        writeAbsoluteData(balls, 2, readData(balls, 2));
+        writeAbsoluteData(balls, 3, readData(balls, 3));
+        return;
+    }
     const float2 position = readPosition(balls);
     const float2 velocity = readVelocity(balls);
 

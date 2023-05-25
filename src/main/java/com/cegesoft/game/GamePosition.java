@@ -21,8 +21,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GamePosition {
-    private final static int ANGLE_PARTITION = 3600;
-    private final static int NORM_PARTITION = 100;
+    public final static int SEARCH_DEPTH = 1;
+    private final static int ANGLE_PARTITION = 900 * SEARCH_DEPTH;
+    private final static int NORM_PARTITION = 100 * SEARCH_DEPTH;
 
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;
@@ -86,7 +87,7 @@ public class GamePosition {
 
     public List<Integer> move(GameFrame.GamePanel panel, GameFrame frame) {
 
-        for (int i = 0; i < 7000; i++) {
+        for (int i = 0; i < 6600; i++) {
             if (i == 1) {
                 this.function.setArgument(12, new CLField<>(this.board.getHandler(), Short.class, (short) 0));
             }
@@ -94,7 +95,7 @@ public class GamePosition {
             this.invertEdit();
             this.function.setArgument(0, this.ballsField);
             this.function.setArgument(1, this.editBallsField);
-            ProgressBar.printProgress(i, 7000);
+            ProgressBar.printProgress(i, 6600);
         }
 
         this.function.setArgument(12, new CLField<>(this.board.getHandler(), Short.class, (short) 1));

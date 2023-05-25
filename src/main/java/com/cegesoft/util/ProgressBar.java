@@ -7,15 +7,18 @@ public class ProgressBar {
         StringBuffer buffer = new StringBuffer(progressBarWidth + 10);
         buffer.append("[");
         for (int i = 0; i < progressBarWidth; i++) {
-            if (i < (int)percent) {
+            if (i < (int)percent || (done + 1 == total)) {
                 buffer.append("=");
-            } else if (i == (int)percent && i != progressBarWidth - 1) {
+            } else if (i == (int)percent) {
                 buffer.append(">");
             } else {
                 buffer.append(" ");
             }
         }
         buffer.append("] ").append(Math.round((percent * 100.0 / progressBarWidth) * 10) / 10.0).append("%");
+        if (done + 1 == total) {
+            buffer.append("\n");
+        }
         System.out.print("\r" + buffer);
     }
 
