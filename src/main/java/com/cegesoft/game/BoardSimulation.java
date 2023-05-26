@@ -2,25 +2,21 @@ package com.cegesoft.game;
 
 import com.cegesoft.opencl.CLField;
 import com.cegesoft.opencl.CLFunction;
-import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;
 import com.cegesoft.util.NDArrayUtil;
 import com.cegesoft.util.ProgressBar;
 import com.nativelibs4java.opencl.CLBuffer;
-import com.nativelibs4java.opencl.CLEvent;
 import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
 import org.bridj.Pointer;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class GamePosition {
+public class BoardSimulation {
     public final static int SEARCH_DEPTH = 1;
     private final static int ANGLE_PARTITION = 900 * SEARCH_DEPTH;
     private final static int NORM_PARTITION = 100 * SEARCH_DEPTH;
@@ -37,7 +33,7 @@ public class GamePosition {
     private final Board board;
     private final CLFunction function;
 
-    public GamePosition(Board board, CLField<Float> ballsField, CLQueue queue) {
+    public BoardSimulation(Board board, CLField<Float> ballsField, CLQueue queue) {
         this.board = board;
         this.queue = queue;
         this.anglesField = new CLField<>(board.getHandler(), Integer.class, ANGLE_PARTITION);

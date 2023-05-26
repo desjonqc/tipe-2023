@@ -224,6 +224,7 @@ public class Board {
         pointer.set((long) i * BALL_BUFFER_SIZE + 2, vx);
         pointer.set((long) i * BALL_BUFFER_SIZE + 3, vy);
         this.getCurrentGameInformation()[0] = (float) Math.sqrt(vx * vx + vy * vy);
+        this.stopCounter = 0;
         ((CLBuffer<Float>)this.ballsField.getArgument()).write(this.getDefaultQueue(), pointer, false).waitFor();
     }
 }

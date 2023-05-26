@@ -2,24 +2,18 @@ package com.cegesoft.ui;
 
 import com.cegesoft.Main;
 import com.cegesoft.game.Board;
-import com.cegesoft.game.GamePosition;
-import org.bridj.Pointer;
+import com.cegesoft.game.BoardSimulation;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Arc2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class GameFrame extends JFrame {
 
@@ -42,6 +36,10 @@ public class GameFrame extends JFrame {
     }
 
     public class GamePanel extends JPanel {
+        public final Color GREEN = new Color(64, 152, 68);
+        public final float holeDiameter = 4.2f;
+
+        private final Image background;
 
         private Function<Integer, float[]> ballInformationFunction;
 
@@ -56,7 +54,7 @@ public class GameFrame extends JFrame {
                         Thread thread = new Thread(() -> {
                             System.out.println("Calculating best shot...");
                             long start = System.currentTimeMillis();
-                            GamePosition position = new GamePosition(board, board.getBallsField(), board.getDefaultQueue());
+                            BoardSimulation position = new BoardSimulation(board, board.getBallsField(), board.getDefaultQueue());
                             List<Integer> betterAngles = position.move(GamePanel.this, GameFrame.this);
                             int bestShot = betterAngles.get(0);
                             float bestAngle = position.getAngle(bestShot);
@@ -118,6 +116,19 @@ public class GameFrame extends JFrame {
                 }
             });
 
+            registerHorizontalBorders(1, 1, holeDiameter, 0);
+            registerHorizontalBorders(1, -1, holeDiameter, 1);
+            registerHorizontalBorders(-1, 1, holeDiameter, 2);
+            registerHorizontalBorders(-1, -1, holeDiameter, 3);
+
+            registerVerticalBorders(1, holeDiameter, 4);
+            registerVerticalBorders(-1, holeDiameter, 5);
+
+            try {
+                background = ImageIO.read(ClassLoader.getSystemResource("wood.png"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         @Override
         public void paint(Graphics g) {
@@ -127,18 +138,13 @@ public class GameFrame extends JFrame {
 
             g.setColor(new Color(1, 1, 1));
             g.fillRect(-5, -5, this.getWidth() + 5, this.getHeight() + 5);
-            try {
-                Image image = ImageIO.read(ClassLoader.getSystemResource("wood.png"));
-                g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), null);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+            g.drawImage(background, 0, 0, this.getWidth(), this.getHeight(), null);
             g.setColor(new Color(64, 152, 68));
             g.fillRect((int) (-(board.getWidth() + 2) * scale / 2) + middleX, (int) (-(board.getHeight() + 2) * scale / 2) + middleY, (int) ((board.getWidth() + 2) * scale), (int) ((board.getHeight() + 2) * scale));
 
             g.setColor(Color.BLACK);
 
-            float holeDiameter = 4.2f;
             g.fillArc((int) ((-board.getWidth() - holeDiameter) * scale / 2) + middleX, (int) ((-board.getHeight() - holeDiameter) * scale / 2) + middleY, (int) (holeDiameter * scale), (int) (holeDiameter * scale), 0, 360);
             g.fillArc((int) ((board.getWidth() - holeDiameter) * scale / 2) + middleX, (int) ((-board.getHeight() - holeDiameter) * scale / 2) + middleY, (int) (holeDiameter * scale), (int) (holeDiameter * scale), 0, 360);
             g.fillArc((int) ((-board.getWidth() - holeDiameter) * scale / 2) + middleX, (int) ((board.getHeight() - holeDiameter) * scale / 2) + middleY, (int) (holeDiameter * scale), (int) (holeDiameter * scale), 0, 360);
@@ -146,13 +152,7 @@ public class GameFrame extends JFrame {
             g.fillArc((int) (middleX - 3 * scale), (int) ((board.getHeight() - 1.4f) * scale / 2) + middleY, (int) (6 * scale), (int) (1.4f * holeDiameter * scale), 0, 180);
             g.fillArc((int) (middleX - 3 * scale), (int) ((-board.getHeight() - 2.0f * holeDiameter - 1.5f) * scale / 2) + middleY, (int) (6 * scale), (int) (1.4f * holeDiameter * scale), 180, 180);
 
-            drawHorizontalBorders(g, -1, -1, holeDiameter);
-            drawHorizontalBorders(g, -1, 1, holeDiameter);
-            drawHorizontalBorders(g, 1, -1, holeDiameter);
-            drawHorizontalBorders(g, 1, 1, holeDiameter);
-
-            drawVerticalBorders(g, -1, holeDiameter);
-            drawVerticalBorders(g, 1, holeDiameter);
+            drawBorders((Graphics2D) g);
 
             for (int i = 1; i < board.getBallsAmount(); i++) {
                 float radiusOffset = 1.2f;
@@ -204,30 +204,34 @@ public class GameFrame extends JFrame {
             this.ballInformationFunction = function;
         }
 
-        private void drawHorizontalBorders(Graphics g, int xSignum, int ySignum, float holeDiameter) {
+        private Polygon[] borders = new Polygon[6];
+
+        private void drawBorders(Graphics2D g) {
+            for (int i = 0; i < 6; i ++) {
+                Polygon polygon = borders[i];
+                g.setColor(GREEN);
+                g.fill(polygon);
+                g.setColor(Color.BLACK);
+                g.draw(polygon);
+            }
+        }
+
+        private void registerHorizontalBorders(int xSignum, int ySignum, float holeDiameter, int i) {
             Polygon polygon = new Polygon();
             polygon.addPoint(middleX + xSignum * Math.round(scale), (int) ((ySignum * (board.getHeight() + holeDiameter)) * scale / 2) + middleY);
             polygon.addPoint(middleX + xSignum * Math.round(2.5f * scale), (int) ((ySignum * board.getHeight()) * scale / 2) + middleY);
             polygon.addPoint((int) ((xSignum * (board.getWidth() - holeDiameter)) * scale / 2) + middleX, (int) ((ySignum * board.getHeight()) * scale / 2) + middleY);
             polygon.addPoint((int) ((xSignum * board.getWidth()) * scale / 2) + middleX, (int) ((ySignum * (board.getHeight() + holeDiameter)) * scale / 2) + middleY);
-            g.setColor(new Color(64, 152, 68));
-
-            ((Graphics2D) g).fill(polygon);
-            g.setColor(Color.BLACK);
-            ((Graphics2D) g).draw(polygon);
+            borders[i] = polygon;
         }
 
-        private void drawVerticalBorders(Graphics g, int xSignum, float holeDiameter) {
+        private void registerVerticalBorders(int xSignum, float holeDiameter, int i) {
             Polygon polygon = new Polygon();
             polygon.addPoint((int) ((xSignum * board.getWidth()) * scale / 2) + middleX, (int) (((board.getHeight() - holeDiameter)) * scale / 2) + middleY);
             polygon.addPoint((int) ((xSignum * board.getWidth()) * scale / 2) + middleX, (int) (((-board.getHeight() + holeDiameter)) * scale / 2) + middleY);
             polygon.addPoint((int) ((xSignum * (board.getWidth() + holeDiameter)) * scale / 2) + middleX, (int) ((-board.getHeight()) * scale / 2) + middleY);
             polygon.addPoint((int) ((xSignum * (board.getWidth() + holeDiameter)) * scale / 2) + middleX, (int) ((board.getHeight()) * scale / 2) + middleY);
-            g.setColor(new Color(64, 152, 68));
-
-            ((Graphics2D) g).fill(polygon);
-            g.setColor(Color.BLACK);
-            ((Graphics2D) g).draw(polygon);
+            borders[i] = polygon;
         }
     }
 }
