@@ -229,12 +229,6 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
         }
         const float2 bPosition = readBallPosition(balls, j);
         const float2 bVelocity = readBallVelocity(balls, j);
-        if (get_global_id(0) == 0 && j == 1) {
-            debug[11] = positionOffset.x;
-            debug[12] = positionOffset.y;
-            debug[13] = bPosition.x;
-            debug[14] = bPosition.y;
-        }
         if (length(positionOffset - bPosition) <= 2) {
             float2 d = (float2) positionOffset - bPosition;
             positionOffset += d * (2 / length(d) - 1);
@@ -245,21 +239,6 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
             float dot2to1 = dot(bVelocity, delta);
 
             velocityOffset += delta * (dot2to1 - dot1to2);
-            if (get_global_id(0) == 1 && j == 0) {
-                debug[0] = 5;
-                debug[1] = velocityOffset.x;
-                debug[2] = velocityOffset.y;
-                debug[3] = delta.x;
-                debug[4] = delta.y;
-                debug[5] = dot1to2;
-                debug[6] = dot2to1;
-            }
-        }
-        if (get_global_id(0) == 1 && j == 0) {
-            debug[7] = positionOffset.x;
-            debug[8] = positionOffset.y;
-            debug[9] = bPosition.x;
-            debug[10] = bPosition.y;
         }
     }
 
