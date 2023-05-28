@@ -27,4 +27,23 @@ public class NDArrayUtil {
         return indices;
     }
 
+    public interface ParametrizedIndex {
+        int getIndex(int localIndex, int ballIndex);
+    }
+
+    public static class SimulationParametrizedIndex implements ParametrizedIndex {
+
+        private final int angle, norm;
+        private final int[] shape;
+        public SimulationParametrizedIndex(int angle, int norm, int[] shape) {
+            this.angle = angle;
+            this.norm = norm;
+            this.shape = shape;
+        }
+        @Override
+        public int getIndex(int localIndex, int ballIndex) {
+            return NDArrayUtil.getIndex(shape, localIndex, ballIndex, angle, norm);
+        }
+    }
+
 }

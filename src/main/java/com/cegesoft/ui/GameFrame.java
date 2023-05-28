@@ -1,8 +1,13 @@
 package com.cegesoft.ui;
 
 import com.cegesoft.Main;
+import com.cegesoft.data.FileStorage;
+import com.cegesoft.data.Storage;
 import com.cegesoft.game.Board;
+import com.cegesoft.game.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
+import com.cegesoft.simulation.implementation.SingleJobHandler;
+import lombok.Getter;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -17,11 +22,15 @@ import java.util.function.Function;
 
 public class GameFrame extends JFrame {
 
+    @Getter
+    private static GameFrame frameInstance;
+
     private final float scale;
     private final int middleX, middleY;
     private final Board board;
 
     public GameFrame(Board board) {
+        frameInstance = this;
         this.board = board;
 
         this.scale = 1000 / board.getWidth();
@@ -43,6 +52,7 @@ public class GameFrame extends JFrame {
 
         private Function<Integer, float[]> ballInformationFunction;
 
+        private FileStorage storage;
         public GamePanel() {
             GameFrame.this.addKeyListener(new java.awt.event.KeyListener() {
                 @Override
@@ -51,30 +61,33 @@ public class GameFrame extends JFrame {
 
                 public void keyPressed(java.awt.event.KeyEvent evt) {
                     if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
-                        Thread thread = new Thread(() -> {
-                            System.out.println("Calculating best shot...");
-                            long start = System.currentTimeMillis();
-                            BoardSimulation position = new BoardSimulation(board, board.getBallsField(), board.getDefaultQueue());
-                            List<Integer> betterAngles = position.move(GamePanel.this, GameFrame.this);
-                            int bestShot = betterAngles.get(0);
-                            float bestAngle = position.getAngle(bestShot);
-                            float bestScore = position.getScore(bestShot);
-                            float bestNorm = position.getNorm(bestShot);
-                            System.out.println("Angle : " + bestAngle);
-                            System.out.println("Norme : " + bestNorm);
-                            System.out.println("Score : " + bestScore);
-                            System.out.println("Temps : " + (System.currentTimeMillis() - start) + "ms");
-
-                            board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
-                            Board.bestShot = false;
-                        }, "PLAY-RESEARCH");
-                        thread.start();
+                        System.out.println("Calculating best shot...");
                         Board.bestShot = true;
+                        SingleJobHandler jobHandler = new SingleJobHandler(board.savePosition(), 0);
+                        jobHandler.start();
                     }
                     if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
                         float bestNorm = 300;
                         float bestAngle = 3;
                         board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
+                    }
+
+                    if (evt.getKeyCode() == KeyEvent.VK_S) {
+                        BoardPosition position = board.savePosition();
+                        System.out.println("Saving position...");
+                        Storage merge = new Storage(position.size(), position.toBytes());
+                        storage = new FileStorage("data.bin", position.size());
+                        storage.write(merge);
+                        System.out.println("Position saved !");
+                    }
+
+                    if (evt.getKeyCode() == KeyEvent.VK_L) {
+                        System.out.println("Loading position...");
+                        Storage merge = storage.read();
+                        BoardPosition position = BoardPosition.empty();
+                        position.fromBytes(merge.getDataGroup(0));
+                        board.setPosition(position);
+                        System.out.println("Position loaded !");
                     }
                 }
 
@@ -134,10 +147,6 @@ public class GameFrame extends JFrame {
         public void paint(Graphics g) {
             super.paint(g);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-
-            g.setColor(new Color(1, 1, 1));
-            g.fillRect(-5, -5, this.getWidth() + 5, this.getHeight() + 5);
 
             g.drawImage(background, 0, 0, this.getWidth(), this.getHeight(), null);
             g.setColor(new Color(64, 152, 68));

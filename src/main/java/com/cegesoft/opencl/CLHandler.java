@@ -1,12 +1,19 @@
 package com.cegesoft.opencl;
 
 import com.nativelibs4java.opencl.*;
+import lombok.Getter;
+
+import java.io.IOException;
 
 public class CLHandler {
+    @Getter
     private final CLContext context;
+    @Getter
+    private final CLFile boardFile;
 
-    public CLHandler() {
+    public CLHandler() throws IOException {
         this.context = JavaCL.createBestContext(CLPlatform.DeviceFeature.GPU);
+        this.boardFile = new CLFile("board.cl", this.context);
     }
 
     public <T> CLBuffer<T> createBuffer(Class<T> tClass, CLMem.Usage usage, int size) {
@@ -15,10 +22,6 @@ public class CLHandler {
 
     public CLQueue createQueue() {
         return this.context.createDefaultQueue();
-    }
-
-    public CLContext getContext() {
-        return context;
     }
 
     public void release() {

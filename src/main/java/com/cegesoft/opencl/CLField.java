@@ -4,15 +4,21 @@ import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLEvent;
 import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
+import lombok.Getter;
 import org.bridj.Pointer;
 
 public class CLField<T> {
 
-    private final CLHandler handler;
-    private CLMem.Usage type;
-    private long size;
-    private final Class<T> tClass;
-    private Object argument;
+    @Getter
+    protected final CLHandler handler;
+    @Getter
+    protected final CLMem.Usage type;
+    @Getter
+    protected final long size;
+    @Getter
+    protected final Class<T> tClass;
+    @Getter
+    protected Object argument;
     public CLField(CLHandler handler, CLMem.Usage type, Class<T> tClass, long size) {
         this.type = type;
         this.size = size;
@@ -26,22 +32,6 @@ public class CLField<T> {
     public CLField(CLHandler handler, Class<T> tClass, T value) {
         this(handler, CLMem.Usage.Input, tClass, 1);
         this.argument = value;
-    }
-
-    public CLMem.Usage getType() {
-        return type;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public Class<T> gettClass() {
-        return tClass;
-    }
-
-    public Object getArgument() {
-        return argument;
     }
 
     public CLEvent setValue(CLQueue queue, long index, T value) {

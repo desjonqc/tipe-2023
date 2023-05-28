@@ -1,6 +1,7 @@
 package com.cegesoft;
 
 import com.cegesoft.game.Board;
+import com.cegesoft.game.BoardConfiguration;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;
 
@@ -17,16 +18,22 @@ import java.util.TimerTask;
 public class Main {
 
     public static int count = 0;
+    public static final int BALL_AMOUNT = 16;
+    public static BoardConfiguration BOARD_CONFIGURATION;
+    public static Board MAIN_BOARD;
 
     public static void main(String[] args) throws IOException {
         CLHandler handler = new CLHandler();
 
+        // Création de la configuration
+        BOARD_CONFIGURATION = new BoardConfiguration(98, 48, BALL_AMOUNT, -0.0012f, handler);
+
         // Création du billard
-        Board board = new Board(handler, 48, 98, 16);
-        board.initialise(Board.INITIAL_POSITION);
+        MAIN_BOARD = new Board(BOARD_CONFIGURATION);
+        MAIN_BOARD.initialise(Board.INITIAL_POSITION);
 
         // Création de la fenêtre
-        GameFrame frame = new GameFrame(board);
+        new GameFrame(MAIN_BOARD);
 
         // Création du processus de simulation
         Timer timer = new Timer();
@@ -40,7 +47,7 @@ public class Main {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                board.tick(frame);
+                MAIN_BOARD.tick();
             }
         }, 0L, (long) (Board.TIME_STEP * 1000));
     }
