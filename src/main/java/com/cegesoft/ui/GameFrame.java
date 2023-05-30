@@ -6,7 +6,12 @@ import com.cegesoft.data.Storage;
 import com.cegesoft.game.Board;
 import com.cegesoft.game.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
-import com.cegesoft.simulation.implementation.SingleJobHandler;
+import com.cegesoft.simulation.Job;
+import com.cegesoft.simulation.implementation.DeepProportionateJobHandler;
+import com.cegesoft.simulation.implementation.SingleSolverJobHandler;
+import com.cegesoft.statistic.StatisticLab;
+import com.cegesoft.util.DepthCounter;
+import com.cegesoft.util.DepthDependantScoreWeighting;
 import lombok.Getter;
 
 import javax.imageio.ImageIO;
@@ -17,7 +22,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Arc2D;
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Function;
 
 public class GameFrame extends JFrame {
@@ -52,7 +56,9 @@ public class GameFrame extends JFrame {
 
         private Function<Integer, float[]> ballInformationFunction;
 
-        private FileStorage storage;
+        private FileStorage fileStorage;
+        private Storage currentStorage;
+        private int currentSavedPosition = 0;
         public GamePanel() {
             GameFrame.this.addKeyListener(new java.awt.event.KeyListener() {
                 @Override
@@ -63,7 +69,7 @@ public class GameFrame extends JFrame {
                     if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
                         System.out.println("Calculating best shot...");
                         Board.bestShot = true;
-                        SingleJobHandler jobHandler = new SingleJobHandler(board.savePosition(), 0);
+                        SingleSolverJobHandler jobHandler = new SingleSolverJobHandler(board.savePosition());
                         jobHandler.start();
                     }
                     if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -73,21 +79,60 @@ public class GameFrame extends JFrame {
                     }
 
                     if (evt.getKeyCode() == KeyEvent.VK_S) {
+                        if (fileStorage == null) {
+                            fileStorage = new FileStorage(StatisticLab.FILE_NAME, 128);
+                        }
+                        if (currentSavedPosition == 10) {
+                            System.out.println("Saving positions...");
+                            currentSavedPosition = 0;
+                            fileStorage.write(currentStorage);
+                            currentStorage = null;
+                            System.out.println("Positions saved !");
+                            return;
+                        }
+                        currentSavedPosition++;
                         BoardPosition position = board.savePosition();
-                        System.out.println("Saving position...");
-                        Storage merge = new Storage(position.size(), position.toBytes());
-                        storage = new FileStorage("data.bin", position.size());
-                        storage.write(merge);
-                        System.out.println("Position saved !");
+                        System.out.println("Registering position... (" + currentSavedPosition + ")");
+                        if (currentStorage == null) {
+                            currentStorage = new Storage(position);
+                        } else {
+                            currentStorage = new Storage(currentStorage, position);
+                        }
                     }
 
                     if (evt.getKeyCode() == KeyEvent.VK_L) {
                         System.out.println("Loading position...");
-                        Storage merge = storage.read();
+                        Storage merge = fileStorage.read();
                         BoardPosition position = BoardPosition.empty();
                         position.fromBytes(merge.getDataGroup(0));
                         board.setPosition(position);
                         System.out.println("Position loaded !");
+                    }
+
+                    if (evt.getKeyCode() == KeyEvent.VK_D) {
+                        DepthDependantScoreWeighting weighting = new DepthDependantScoreWeighting() {
+                            @Override
+                            public boolean isRandom() {
+                                return true;
+                            }
+
+                            @Override
+                            public int[] getWeighting(float score) {
+                                if (score == 0) {
+                                    return new int[] {3};
+                                }
+                                if (score < 0) {
+                                    return new int[] {3};
+                                }
+                                return new int[] {4};
+                            }
+                        };
+                        DeepProportionateJobHandler jobHandler = new DeepProportionateJobHandler(
+                                new Job(
+                                        new BoardSimulation(Main.BOARD_CONFIGURATION, board.savePosition()),
+                                        BoardSimulation.SIMULATION_TIME),
+                                new DepthCounter(1), weighting);
+                        jobHandler.start();
                     }
                 }
 

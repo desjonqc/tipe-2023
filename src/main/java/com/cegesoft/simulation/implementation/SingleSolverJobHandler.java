@@ -4,32 +4,28 @@ import com.cegesoft.Main;
 import com.cegesoft.game.Board;
 import com.cegesoft.game.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
-import com.cegesoft.game.BoardStructure;
 import com.cegesoft.simulation.Job;
 import com.cegesoft.simulation.MultipleJobHandler;
 
-public class SingleJobHandler extends MultipleJobHandler {
+public class SingleSolverJobHandler extends MultipleJobHandler {
 
     private long start;
     private final BoardPosition initialPosition;
-    public SingleJobHandler(BoardPosition initialPosition, int jobHandlerId) {
-        super(jobHandlerId);
+    public SingleSolverJobHandler(BoardPosition initialPosition) {
         this.initialPosition = initialPosition;
     }
 
     @Override
     public Job[] createJobs() {
         start = System.currentTimeMillis();
-        BoardSimulation simulation = new BoardSimulation(Main.BOARD_CONFIGURATION);
-        simulation.initialise(this.initialPosition);
-        return new Job[] {new Job(simulation, 6600)};
+        return new Job[] {new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPosition), BoardSimulation.SIMULATION_TIME)};
     }
 
     @Override
     public void handleResults() {
         Job job = this.jobs[0];
         BoardSimulation simulation = (BoardSimulation) job.getExecutable();
-        int bestShot = simulation.getResults().get(0);
+        int bestShot = simulation.getResults(1).get(0);
         float bestAngle = simulation.getAngle(bestShot);
         float bestScore = simulation.getScore(bestShot);
         float bestNorm = simulation.getNorm(bestShot);

@@ -24,10 +24,6 @@ public class CLHandler {
         return this.context.createDefaultQueue();
     }
 
-    public void release() {
-        this.context.release();
-    }
-
     //4294959104
     //3221061632
 }

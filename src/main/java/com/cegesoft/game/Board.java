@@ -37,8 +37,9 @@ public class Board extends BoardStructure {
         super(handler, height, width, ballsAmount, alpha, (long) ballsAmount * BoardStructure.BALL_BUFFER_SIZE, BoardStructure.GAME_DATA_SIZE);
     }
 
-    public Board(BoardConfiguration configuration) {
+    public Board(BoardConfiguration configuration, BoardPosition initialPosition) {
         this(configuration.getHandler(), configuration.getHeight(), configuration.getWidth(), configuration.getBallsAmount(), configuration.getAlpha());
+        this.initialise(initialPosition);
     }
 
     @Override
@@ -88,6 +89,7 @@ public class Board extends BoardStructure {
             firstEmptyTick = false;
             this.gameInformationField.setValue(this.queue, 1L, 0f).waitFor();
             System.out.println("Count : " + Main.count);
+            Main.count = 0;
             float[] info = getBallInformation(0);
             if (info[1] < -this.getHeight() / 2 - 1) {
                 ballsField.setValue(queue, 1, 0.0f);

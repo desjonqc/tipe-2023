@@ -10,7 +10,7 @@ public interface IJobExecutable {
 
     void reset();
 
-    List<Integer> getResults();
+    List<Integer> getResults(int score);
 
     BoardPosition getBoardPosition(int resultIndex);
 

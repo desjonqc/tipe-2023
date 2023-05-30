@@ -23,14 +23,9 @@ public class Main {
     public static Board MAIN_BOARD;
 
     public static void main(String[] args) throws IOException {
-        CLHandler handler = new CLHandler();
-
-        // Création de la configuration
-        BOARD_CONFIGURATION = new BoardConfiguration(98, 48, BALL_AMOUNT, -0.0012f, handler);
-
+        initialise();
         // Création du billard
-        MAIN_BOARD = new Board(BOARD_CONFIGURATION);
-        MAIN_BOARD.initialise(Board.INITIAL_POSITION);
+        MAIN_BOARD = new Board(BOARD_CONFIGURATION, Board.INITIAL_POSITION);
 
         // Création de la fenêtre
         new GameFrame(MAIN_BOARD);
@@ -39,10 +34,7 @@ public class Main {
         Timer timer = new Timer();
 
         // Lorsque l'application est fermée, on libère les ressources
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            timer.cancel();
-            handler.release();
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(timer::cancel));
 
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -50,5 +42,12 @@ public class Main {
                 MAIN_BOARD.tick();
             }
         }, 0L, (long) (Board.TIME_STEP * 1000));
+    }
+
+    public static void initialise() throws IOException {
+        CLHandler handler = new CLHandler();
+        // Création de la configuration
+        BOARD_CONFIGURATION = new BoardConfiguration(98, 48, BALL_AMOUNT, -0.0012f, handler);
+
     }
 }

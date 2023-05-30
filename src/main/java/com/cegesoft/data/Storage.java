@@ -11,7 +11,12 @@ public class Storage {
     @Getter
     private final byte[] data;
 
-    public Storage(int dataGroupSize, byte[]... groups) {
+    public Storage(int dataGroupSize, byte[] data) {
+        this.dataGroupSize = dataGroupSize;
+        this.data = data;
+    }
+
+    public Storage(int dataGroupSize, byte[][] groups) {
         this.dataGroupSize = dataGroupSize;
 
         this.data = new byte[dataGroupSize * groups.length];
@@ -27,7 +32,7 @@ public class Storage {
     public Storage(Storage base, ByteStorable... groups) {
         if (base.dataGroupSize != getGroupSize(groups))
             throw new IllegalArgumentException("Data group size mismatch");
-        this.dataGroupSize = base.dataGroupSize + getGroupSize(groups);
+        this.dataGroupSize = base.dataGroupSize;
         this.data = new byte[dataGroupSize * groups.length + base.data.length];
         System.arraycopy(base.data, 0, data, 0, base.data.length);
         for (int i = 0; i < groups.length; i++) {

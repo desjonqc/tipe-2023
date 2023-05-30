@@ -14,9 +14,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class BoardSimulation extends BoardStructure implements IJobExecutable {
+    public final static int SIMULATION_TIME = 6600;
     public final static int SEARCH_DEPTH = 1;
-    private final static int ANGLE_PARTITION = 900 * SEARCH_DEPTH;
-    private final static int NORM_PARTITION = 100 * SEARCH_DEPTH;
+    public static int ANGLE_PARTITION = 900 * SEARCH_DEPTH;
+    public static int NORM_PARTITION = 100 * SEARCH_DEPTH;
 
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;
@@ -35,8 +36,9 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
         this(board.getHandler(), board.getHeightField().getArgument(), board.getWidthField().getArgument(), board.getBallsAmountField().getArgument(), board.getAlphaField().getArgument());
     }
 
-    public BoardSimulation(BoardConfiguration configuration) {
+    public BoardSimulation(BoardConfiguration configuration, BoardPosition initialPosition) {
         this(configuration.getHandler(), configuration.getHeight(), configuration.getWidth(), configuration.getBallsAmount(), configuration.getAlpha());
+        this.initialise(initialPosition);
     }
 
     @Override
@@ -56,17 +58,6 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
             info[j] = pointer.get(NDArrayUtil.getIndex(this.BALL_DATA_SHAPE, j, i, angle, norm));
         }
         return info;
-    }
-
-    public List<Integer> move() {
-
-        for (int i = 0; i < 6600; i++) {
-
-            ProgressBar.printProgress(i, 6600);
-        }
-
-
-        return null;
     }
 
 
@@ -104,9 +95,13 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
     }
 
     @Override
-    public List<Integer> getResults() {
-        IntStream stream = IntStream.range(0, ANGLE_PARTITION * NORM_PARTITION);
-        return stream.boxed().sorted((o1, o2) -> -Float.compare(this.currentGameInformation[o1 * BoardStructure.GAME_DATA_SIZE + 1], this.currentGameInformation[o2 * BoardStructure.GAME_DATA_SIZE + 1]))
+    public List<Integer> getResults(int score) {
+        return IntStream.range(0, ANGLE_PARTITION * NORM_PARTITION).boxed()
+                .filter(o -> {
+                    float current = this.currentGameInformation[o * BoardStructure.GAME_DATA_SIZE + 1];
+                    return score == 0 ? current == 0 : (score == -1 ? current < 0 : current > 0);
+                })
+                .sorted((o1, o2) -> (score == -1 ? 1 : -1) * Float.compare(this.currentGameInformation[o1 * BoardStructure.GAME_DATA_SIZE + 1], this.currentGameInformation[o2 * BoardStructure.GAME_DATA_SIZE + 1]))
                 .collect(Collectors.toList());
     }
 

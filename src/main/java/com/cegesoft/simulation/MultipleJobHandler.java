@@ -4,14 +4,11 @@ import com.cegesoft.util.ProgressBar;
 import lombok.Getter;
 
 public abstract class MultipleJobHandler extends Thread {
-
-    @Getter
-    private final int jobHandlerId;
     protected Job[] jobs;
+    protected long start;
 
-    public MultipleJobHandler(int jobHandlerId) {
-        super("JobHandler-" + jobHandlerId);
-        this.jobHandlerId = jobHandlerId;
+    public MultipleJobHandler() {
+        super("JobHandler");
     }
 
     public abstract Job[] createJobs();
@@ -27,7 +24,7 @@ public abstract class MultipleJobHandler extends Thread {
         return true;
     }
 
-    private void printProgress() {
+    protected void printProgress() {
         int done = 0;
         int total = 0;
         for (Job job : jobs) {
@@ -39,7 +36,11 @@ public abstract class MultipleJobHandler extends Thread {
 
     @Override
     public void run() {
+        start = System.currentTimeMillis();
         this.jobs = createJobs();
+        if (this.jobs.length == 0) {
+            return;
+        }
         for (Job job : this.jobs) {
             job.start();
         }
@@ -52,5 +53,6 @@ public abstract class MultipleJobHandler extends Thread {
             }
         }
         this.handleResults();
+        System.out.println("Jobs completed in " + (System.currentTimeMillis() - start) + "ms");
     }
 }
