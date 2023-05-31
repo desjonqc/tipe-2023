@@ -4,6 +4,9 @@ import com.cegesoft.util.NDArrayUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,13 +31,21 @@ public class Statistic {
         return this.getOrCreateValue(key.getIndex(indices));
     }
 
-    public String saveToNumpy() {
+    public String saveToNumpy(boolean normalize, int[] coefficients) {
         StringBuilder builder = new StringBuilder();
         builder.append("# NUMPY SAVE\n");
         builder.append("# SHAPE: \n");
         for (int i = 0; i < key.getShape().length; i++) {
             builder.append(key.getShape()[i]);
             if (i < key.getShape().length - 1) {
+                builder.append(",");
+            }
+        }
+        builder.append("\n");
+        builder.append("# COEFFICIENTS: \n");
+        for (int i = 0; i < coefficients.length; i++) {
+            builder.append(coefficients[i]);
+            if (i < coefficients.length - 1) {
                 builder.append(",");
             }
         }
@@ -46,7 +57,25 @@ public class Statistic {
                 builder.append(",");
             }
         }
+        builder.append("\n");
+        builder.append("# NORMALIZE: \n");
+        builder.append(normalize);
         return builder.toString();
+    }
+
+    public void saveFileToNumpy(int simulationId, String name, boolean normalize, int[] coefficients) throws IOException {
+        File file = new File("python/data/simulation-" + simulationId + "/" + name + ".statistic");
+        if (file.getParentFile() != null && !file.getParentFile().exists()) {
+            if (!file.getParentFile().mkdirs())
+                throw new IOException("Could not create parent directories!");
+        }
+        if (!file.exists()) {
+            if (!file.createNewFile())
+                throw new IOException("Could not create file!");
+        }
+        FileWriter writer = new FileWriter(file);
+        writer.write(saveToNumpy(normalize, coefficients));
+        writer.close();
     }
 
     @AllArgsConstructor
