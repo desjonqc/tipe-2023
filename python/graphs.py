@@ -40,4 +40,4 @@ def plot_simulation(id: int):
     plot_directory(r"data\simulation-" + str(id))
 
 
-plot_simulation(1)
+plot_simulation(3)

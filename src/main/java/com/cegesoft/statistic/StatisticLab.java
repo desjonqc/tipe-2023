@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class StatisticLab {
 
-    public static String FILE_NAME = "statistic.pos";
+    public static String FILE_NAME = "statistic-2.pos";
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length == 0) {
             throw new IllegalArgumentException("Please provide a simulation id");
@@ -23,7 +23,7 @@ public class StatisticLab {
             coefficients = new int[] {Integer.parseInt(coeff_str[0]), Integer.parseInt(coeff_str[1]), Integer.parseInt(coeff_str[2]), Integer.parseInt(coeff_str[3])};
         }
         if (args.length > 2) {
-            FILE_NAME = args[0];
+            FILE_NAME = args[2];
         }
         Main.initialise();
         FileStorage fileStorage = new FileStorage(FILE_NAME, 128);
