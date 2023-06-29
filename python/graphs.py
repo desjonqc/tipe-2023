@@ -41,3 +41,5 @@ def plot_simulation(id: int):
 
 
 plot_simulation(3)
+
+# Angle et norme optimales : 3, 2 => 500,119 ; 500 * 119 = 59500

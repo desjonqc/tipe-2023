@@ -1,7 +1,8 @@
 package com.cegesoft.simulation.implementation;
 
 import com.cegesoft.Main;
-import com.cegesoft.game.BoardPosition;
+import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
 import com.cegesoft.simulation.Job;
 import com.cegesoft.simulation.MultipleJobHandler;
@@ -14,11 +15,13 @@ public class MeasurementJobHandler extends MultipleJobHandler {
     private final BoardPosition[] initialPositions;
     private final int norm_size;
     private final int angle_size;
+    private final SimulationInformation information;
 
-    public MeasurementJobHandler(BoardPosition[] initialPositions, int norm_size, int angle_size) {
+    public MeasurementJobHandler(BoardPosition[] initialPositions, int norm_size, int angle_size, SimulationInformation information) {
         this.initialPositions = initialPositions;
         this.norm_size = norm_size;
         this.angle_size = angle_size;
+        this.information = information;
     }
 
     @Override
@@ -26,7 +29,7 @@ public class MeasurementJobHandler extends MultipleJobHandler {
         start = System.currentTimeMillis();
         Job[] jobs = new Job[this.initialPositions.length];
         for (int i = 0; i < this.initialPositions.length; i++) {
-            jobs[i] = new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPositions[i]), BoardSimulation.SIMULATION_TIME);
+            jobs[i] = new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPositions[i], information), BoardSimulation.SIMULATION_TIME);
         }
         return jobs;
     }

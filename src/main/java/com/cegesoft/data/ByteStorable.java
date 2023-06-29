@@ -1,5 +1,7 @@
 package com.cegesoft.data;
 
+import com.cegesoft.game.SimulationInformation;
+
 public interface ByteStorable {
 
     byte[] toBytes();
@@ -8,7 +10,7 @@ public interface ByteStorable {
 
     int size();
 
-    static ByteStorable empty() {
-        return null;
+    static ByteStorable empty(SimulationInformation simulationInformation) {
+        throw new IllegalStateException("empty function not implemented");
     }
 }

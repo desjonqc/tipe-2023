@@ -3,7 +3,8 @@ package com.cegesoft.statistic;
 import com.cegesoft.Main;
 import com.cegesoft.data.FileStorage;
 import com.cegesoft.data.Storage;
-import com.cegesoft.game.BoardPosition;
+import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
 import com.cegesoft.simulation.implementation.MeasurementJobHandler;
 
@@ -35,9 +36,8 @@ public class StatisticLab {
 
         for (int i = 0; i < StatisticManager.NORM_ANGLE_SHAPE[0]; i++) {
             for (int j = 0; j < StatisticManager.NORM_ANGLE_SHAPE[1]; j++) {
-                BoardSimulation.NORM_PARTITION = coefficients[2] + i * coefficients[3];
-                BoardSimulation.ANGLE_PARTITION = coefficients[0] + j * coefficients[1]; // 180 -> 1206
-                MeasurementJobHandler handler = new MeasurementJobHandler(positions, i, j);
+                SimulationInformation information = new SimulationInformation(coefficients[0] + j * coefficients[1], coefficients[2] + i * coefficients[3], 15);
+                MeasurementJobHandler handler = new MeasurementJobHandler(positions, i, j, information);
                 handler.start();
                 handler.join();
                 System.out.println("Finished " + i + " " + j);

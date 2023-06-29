@@ -1,12 +1,16 @@
 package com.cegesoft.data;
 
+import lombok.Getter;
+
 import java.io.*;
 import java.nio.file.Files;
 
 public class FileStorage {
 
+    @Getter
     private final String path;
     private final int dataGroupSize;
+    @Getter
     private final File file;
 
     public FileStorage(String path, int dataGroupSize) {
@@ -37,16 +41,12 @@ public class FileStorage {
         }
     }
 
-    public Storage read() {
-        try {
-            DataInputStream in = new DataInputStream(Files.newInputStream(file.toPath()));
-            byte[] data = new byte[(int) file.length()];
-            in.readFully(data);
-            in.close();
-            return new Storage(dataGroupSize, data);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Storage read() throws IOException {
+        DataInputStream in = new DataInputStream(Files.newInputStream(file.toPath()));
+        byte[] data = new byte[(int) file.length()];
+        in.readFully(data);
+        in.close();
+        return new Storage(dataGroupSize, data);
     }
 
 }

@@ -21,7 +21,7 @@ class StatisticFile:
             elif len(data_raw) == 0:
                 data_raw.append([float(i) for i in line.split(',')])
             else:
-                normalize = bool(line)
+                normalize = line.replace('\n', '').lower() == 'true'
 
         self.shape = tuple(shape)
         np_data_raw = np.reshape(np.array(data_raw), self.shape)

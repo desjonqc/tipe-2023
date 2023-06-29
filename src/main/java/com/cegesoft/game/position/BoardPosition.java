@@ -1,18 +1,19 @@
-package com.cegesoft.game;
+package com.cegesoft.game.position;
 
 import com.cegesoft.Main;
 import com.cegesoft.data.ByteStorable;
+import com.cegesoft.game.Board;
+import com.cegesoft.game.BoardStructure;
+import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.opencl.CLBufferField;
-import com.cegesoft.opencl.CLField;
 import com.cegesoft.opencl.CLHandler;
+import com.cegesoft.util.ByteArrayConverter;
 import com.cegesoft.util.NDArrayUtil;
 import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
 import lombok.Getter;
 import org.bridj.Pointer;
-
-import java.nio.ByteBuffer;
 
 public class BoardPosition implements ByteStorable {
 
@@ -49,21 +50,12 @@ public class BoardPosition implements ByteStorable {
 
     @Override
     public byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(size());
-        for (int i = 0; i < position.length; i++) {
-            buffer.position(4 * i); // 4 bytes per float, so we multiply by 4 to get the correct position in the buffer
-            buffer.putFloat(position[i]);
-        }
-        return buffer.array();
+        return ByteArrayConverter.floatsToBytes(position);
     }
 
     @Override
     public void fromBytes(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        for (int i = 0; i < position.length; i++) {
-            buffer.position(4 * i); // 4 bytes per float, so we multiply by 4 to get the correct position in the buffer
-            position[i] = buffer.getFloat();
-        }
+        ByteArrayConverter.bytesToFloats(bytes, position);
     }
 
     @Override
@@ -71,7 +63,7 @@ public class BoardPosition implements ByteStorable {
         return 4 * position.length;
     }
 
-    public static BoardPosition empty() {
+    public static BoardPosition empty(SimulationInformation information) {
         return new BoardPosition();
     }
 

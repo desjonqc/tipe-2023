@@ -2,7 +2,8 @@ package com.cegesoft.simulation.implementation;
 
 import com.cegesoft.Main;
 import com.cegesoft.game.Board;
-import com.cegesoft.game.BoardPosition;
+import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
 import com.cegesoft.simulation.Job;
 import com.cegesoft.simulation.MultipleJobHandler;
@@ -11,14 +12,16 @@ public class SingleSolverJobHandler extends MultipleJobHandler {
 
     private long start;
     private final BoardPosition initialPosition;
-    public SingleSolverJobHandler(BoardPosition initialPosition) {
+    private final SimulationInformation information;
+    public SingleSolverJobHandler(BoardPosition initialPosition, SimulationInformation information) {
         this.initialPosition = initialPosition;
+        this.information = information;
     }
 
     @Override
     public Job[] createJobs() {
         start = System.currentTimeMillis();
-        return new Job[] {new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPosition), BoardSimulation.SIMULATION_TIME)};
+        return new Job[] {new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPosition, this.information), BoardSimulation.SIMULATION_TIME)};
     }
 
     @Override

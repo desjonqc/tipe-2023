@@ -1,6 +1,7 @@
 package com.cegesoft.game;
 
 import com.cegesoft.Main;
+import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;

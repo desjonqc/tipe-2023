@@ -1,5 +1,6 @@
 package com.cegesoft.game;
 
+import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.opencl.*;
 import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
@@ -40,6 +41,8 @@ public abstract class BoardStructure {
     protected final CLBufferField<Float> gameInformationField;
     @Getter
     protected float[] currentGameInformation;
+    @Getter
+    protected BoardPosition initialPosition;
 
     public BoardStructure(CLHandler handler, float height, float width, int ballsAmount, float alpha, long ballFieldSize, long gameFieldSize) {
         this.alphaField = new CLConstantField<>(handler, Float.class, alpha);
@@ -75,6 +78,7 @@ public abstract class BoardStructure {
 
     public void initialise(BoardPosition position) {
         this.initialise_(position);
+        this.initialPosition = position;
         this.function = this.createFunction();
     }
 

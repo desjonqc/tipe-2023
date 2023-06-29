@@ -1,5 +1,6 @@
 package com.cegesoft.data;
 
+import com.cegesoft.game.SimulationInformation;
 import lombok.Getter;
 
 import java.lang.reflect.InvocationTargetException;
@@ -40,6 +41,10 @@ public class Storage {
         }
     }
 
+    public Storage addStorable(ByteStorable... groups) {
+        return new Storage(this, groups);
+    }
+
     private static int getGroupSize(ByteStorable... groups) {
         int size = groups[0].size();
         for (ByteStorable group : groups) {
@@ -63,14 +68,18 @@ public class Storage {
         return result;
     }
 
-    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index) {
+    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index, SimulationInformation... simulationInformation) {
         try {
-            T result = (T) tClass.getDeclaredMethod("empty").invoke(null);
+            T result = (T) tClass.getDeclaredMethod("empty", SimulationInformation.class).invoke(null, simulationInformation.length == 0 ? null : simulationInformation[0]);
             result.fromBytes(getDataGroup(index));
             return result;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public int getGroupsAmount() {
+        return this.data.length / this.dataGroupSize;
     }
 
 }
