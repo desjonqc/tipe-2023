@@ -38,7 +38,7 @@ public class Main {
             return true;
         }
 
-        ApplicationsImpl currentApplication = ApplicationsImpl.HELP;
+        ApplicationsImpl currentApplication = System.console() != null ? ApplicationsImpl.HELP : ApplicationsImpl.GAME;
 
         for (String arg : args) {
             if (arg.startsWith("app=")) {

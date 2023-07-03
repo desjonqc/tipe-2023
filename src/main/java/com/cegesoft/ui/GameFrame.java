@@ -30,17 +30,21 @@ public class GameFrame extends JFrame {
         this.setContentPane(this.classicGamePanel = new ClassicGamePanel(this, board));
         this.classicGamePanel.registerListeners();
 
-        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                try {
-                    Main.listenCommand();
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+        if (System.console() != null) {
+            this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            this.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    try {
+                        Main.listenCommand();
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        }
 
 
         this.setVisible(true);
