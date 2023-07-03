@@ -19,10 +19,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class BoardSimulation extends BoardStructure implements IJobExecutable {
-    public final static int SIMULATION_TIME = 6600;
-//    public static int this.information.getAnglePartition() = 900 * SEARCH_DEPTH;
-//    public static int this.information.getNormPartition() = 100 * SEARCH_DEPTH;
-
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;
     private final CLConstantField<Integer> anglesField;

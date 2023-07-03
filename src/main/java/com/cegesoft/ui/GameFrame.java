@@ -1,10 +1,13 @@
 package com.cegesoft.ui;
 
+import com.cegesoft.Main;
 import com.cegesoft.game.Board;
 import com.cegesoft.ui.panels.ClassicGamePanel;
 import lombok.Getter;
 
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class GameFrame extends JFrame {
 
@@ -26,7 +29,20 @@ public class GameFrame extends JFrame {
         this.middleY = this.getHeight() / 2 + 30;
         this.setContentPane(this.classicGamePanel = new ClassicGamePanel(this, board));
         this.classicGamePanel.registerListeners();
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                try {
+                    Main.listenCommand();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+
         this.setVisible(true);
     }
 

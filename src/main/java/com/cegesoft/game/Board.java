@@ -2,6 +2,7 @@ package com.cegesoft.game;
 
 import com.cegesoft.Main;
 import com.cegesoft.game.position.BoardPosition;
+import com.cegesoft.log.Logger;
 import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;
@@ -77,7 +78,6 @@ public class Board extends BoardStructure {
             return;
         }
         if (!everyBallStopped()) {
-            Main.count++;
             this.gameInformationField.setValue(this.queue, 0L, 0f).waitFor();
             this.function.call(this.queue, new int[]{this.getBallsAmount()}).waitFor();
             invertEdit();
@@ -89,8 +89,6 @@ public class Board extends BoardStructure {
         } else if (firstEmptyTick) {
             firstEmptyTick = false;
             this.gameInformationField.setValue(this.queue, 1L, 0f).waitFor();
-            System.out.println("Count : " + Main.count);
-            Main.count = 0;
             float[] info = getBallInformation(0);
             if (info[1] < -this.getHeight() / 2 - 1) {
                 ballsField.setValue(queue, 1, 0.0f);
@@ -98,11 +96,11 @@ public class Board extends BoardStructure {
                 ballsField.setValue(queue, 4, 0.0f);
             }
             if (currentGameInformation[1] > 0) {
-                System.out.println("Player 1 won");
+                Logger.getLogger().println("Player 1 won");
             } else if (currentGameInformation[1] < 0) {
-                System.out.println("Player 2 won");
+                Logger.getLogger().println("Player 2 won");
             } else {
-                System.out.println("Draw");
+                Logger.getLogger().println("Draw");
             }
         }
     }

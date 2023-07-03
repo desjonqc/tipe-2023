@@ -1,6 +1,7 @@
 package com.cegesoft.game;
 
 import com.cegesoft.Main;
+import com.cegesoft.app.property.Property;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.util.ByteArrayConverter;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,6 @@ public class SimulationInformation {
     }
 
     public int getDataGroupSize() {
-        return 8 * Main.BALL_AMOUNT + this.getUnitSize() * this.getResultsLimit();
+        return 8 * Main.getIntProperty(Property.BALL_AMOUNT) + this.getUnitSize() * this.getResultsLimit();
     }
 }

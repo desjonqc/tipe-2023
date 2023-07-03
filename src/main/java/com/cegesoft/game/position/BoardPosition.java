@@ -1,6 +1,7 @@
 package com.cegesoft.game.position;
 
 import com.cegesoft.Main;
+import com.cegesoft.app.property.Property;
 import com.cegesoft.data.ByteStorable;
 import com.cegesoft.game.Board;
 import com.cegesoft.game.BoardStructure;
@@ -21,8 +22,8 @@ public class BoardPosition implements ByteStorable {
     private final float[] position;
 
     public BoardPosition(float[] position, NDArrayUtil.ParametrizedIndex index) {
-        this.position = new float[2 * Main.BALL_AMOUNT];
-        for (int i = 0; i < Main.BALL_AMOUNT; i++) {
+        this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
+        for (int i = 0; i < Main.getIntProperty(Property.BALL_AMOUNT); i++) {
             this.position[2 * i] = position[index.getIndex(0, i)];
             this.position[2 * i + 1] = position[index.getIndex(1, i)];
         }
@@ -41,7 +42,7 @@ public class BoardPosition implements ByteStorable {
     }
 
     private BoardPosition() {
-        this.position = new float[2 * Main.BALL_AMOUNT];
+        this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
     }
 
     public float[] getBallPosition(int ball) {

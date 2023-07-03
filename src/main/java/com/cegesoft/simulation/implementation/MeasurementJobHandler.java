@@ -1,6 +1,7 @@
 package com.cegesoft.simulation.implementation;
 
 import com.cegesoft.Main;
+import com.cegesoft.app.property.Property;
 import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.BoardSimulation;
@@ -29,7 +30,7 @@ public class MeasurementJobHandler extends MultipleJobHandler {
         start = System.currentTimeMillis();
         Job[] jobs = new Job[this.initialPositions.length];
         for (int i = 0; i < this.initialPositions.length; i++) {
-            jobs[i] = new Job(new BoardSimulation(Main.BOARD_CONFIGURATION, this.initialPositions[i], information), BoardSimulation.SIMULATION_TIME);
+            jobs[i] = new Job(new BoardSimulation(Main.getTProperty(Property.BOARD_CONFIGURATION), this.initialPositions[i], information), Main.getIntProperty(Property.SIMULATION_TIME));
         }
         return jobs;
     }

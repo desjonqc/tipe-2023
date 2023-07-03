@@ -79,7 +79,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.cegesoft.statistic.StatisticLab
+                                        com.cegesoft.Main
                                     </mainClass>
                                 </manifest>
                             </archive>

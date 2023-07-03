@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class StatisticManager {
 
-    public static final int[] NORM_ANGLE_SHAPE = new int[] { 10, 5 };
+    public static int[] NORM_ANGLE_SHAPE = new int[] { 10, 5 };
     private static final ConcurrentHashMap<StatisticTag, Statistic> statistics = new ConcurrentHashMap<>();
 
     public static Statistic getOrCreateStatistic(StatisticTag tag) {
