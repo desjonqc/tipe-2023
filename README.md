@@ -33,7 +33,7 @@ Les contacts entre une boule et un mur sont sans perte d'énergie et respecte le
 Les contacts entre une boule A et une boule B sont également sans perte d'énergie. Le transfert d'énergie d'une boule à l'autre est total, selon le vecteur AB.
 
 ## Frottements
-Les frottements avec le sol et l'air sont modélisés par une force de frottement fluide de paramètre \alpha (paramétrable)
+Les frottements avec le sol et l'air sont modélisés par une force de frottement fluide de paramètre $\alpha$ (paramétrable)
 
 
 # Simulation
@@ -42,5 +42,5 @@ Les frottements avec le sol et l'air sont modélisés par une force de frottemen
 Le temps est échantillonné en millisecondes. tout évènement d'une durée inférieure à une milliseconde est négligé.
 
 ## Principe
-L'algorithme utilisé est semblable à l'algorithme d'Euler. A chaque mise à jour de la simulation, est ajouté à la position de chaque boule \Deltat\*v, et à la vitesse de la boule -\alpha*v
+L'algorithme utilisé est semblable à l'algorithme d'Euler. A chaque mise à jour de la simulation, est ajouté à la position de chaque boule $\Delta t\*v$, et à la vitesse de la boule $-\alpha*v$
 
