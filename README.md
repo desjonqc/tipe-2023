@@ -76,25 +76,29 @@ On considère un mur dirigé par un vecteur unitaire $\vec{u}$. Lors d'un contac
 
 On considère le choc instantané entre deux boules $B_i$ et $B_j$ où $i \neq j$. Ce choc n'a de sens que si $||\vec{r_i} - \vec{r_j}|| \leq 2$.
 
-On pose $\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2}$
+On pose $\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2} = \begin{pmatrix}\delta_x\cr\delta_y\cr\end{pmatrix}$
 
 Il vient alors :
 
 $$
 \begin{cases}
-v_{i,x}^+ = v_{i,x}^- + \delta_x \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta} \\\\ v_{i,y}^+ = v_{i,y}^- + \delta_x \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta}
+v_{i,x}^+ = v_{i,x}^- + \delta_x \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta} \\\\ v_{i,y}^+ = v_{i,y}^- + \delta_y \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta}
 \end{cases}
 \quad \text{ et } \quad
 \begin{cases}
-v_{j,x}^+ = v_{j,x}^- + \delta_x \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta} \\\\ v_{j,y}^+ = v_{j,y}^- + \delta_x \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta}
+v_{j,x}^+ = v_{j,x}^- + \delta_x \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta} \\\\ v_{j,y}^+ = v_{j,y}^- + \delta_y \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta}
 \end{cases}
 $$
 
 # Simulation
 
+On définit une simulation par le calcul des positions de l'ensemble des boules présentes sur le billard. Une simulation commence par l'ajout d'un vecteur vitesse à la boule blanche, et s'arrête lorsque toutes les boules sont à l'arrêt.
+
 ## Représentations
 
 Un billard est représenté numériquement par un tableau de dimension $5$ et de taille $16$ (paramétrable) : Pour chaque boule $B_i$, il en faut 2 pour représenter $\vec{r_i}$, 2 pour représenter $\vec{v_i}$ et une pour enregistrer des propriétés propres à la boule (par exemple si la boule est entrée dans un trou). Ce tableau est représenté numériquement par un `float[]` de taille $5 \times 16 = 80$.
+
+On ajoute à cela un tableau de taille $2$ pour stocker des informations propres à la simulation : Un indicateur de mouvement sur le billard, et le score marqué.
 
 ## Echantillonnage temporel
 
@@ -102,4 +106,4 @@ L'échantillon de temps est $\Delta t = 1 ms$. Tout évènement d'une durée inf
 
 ## Calcul des positions et vitesses des boules
 
-Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle.
+Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](/#Représentation)
