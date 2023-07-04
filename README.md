@@ -106,4 +106,4 @@ L'échantillon de temps est $\Delta t = 1 ms$. Tout évènement d'une durée inf
 
 ## Calcul des positions et vitesses des boules
 
-Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](/#représentations)
+Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](#représentations)
