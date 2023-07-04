@@ -26,7 +26,7 @@ Vous pouvez les inscrire directement dans la commande de lancement sans passer p
 
 > java -jar &#60;nom du jar&#62;.jar app=game [...]
 
-Lors de la fermeture des éventuelles fenêtres, vous allez être redirigé vers la console. Tapez 'quit' pour tuer le programme.
+**/!\ Lors de la fermeture des éventuelles fenêtres, vous allez être redirigé vers la console. Tapez 'quit' pour tuer le programme.**
 
 # Modélisation Physique
 
@@ -36,7 +36,7 @@ Les boules sont considérées comme parfaitement sphériques. On suppose qu'elle
 
 ### Notations
 
-On numérote chaque boule $B_i$ avec un indice $i \in [0; 15]$. On associe alors à la boule $B_i$ la position $\vec{r_i}$ et la vitesse $\vec{v_i}$. On munit l'espace d'un repère orthonormé $(Oxy)$ de centre $O$ le centre du billard et tel que chaque boule ait un rayon de 1.
+On numérote chaque boule $B_i$ avec un indice $i \in [0; 15]$. On associe alors à la boule $B_i$ la position $\vec{r_i}$ et la vitesse $\vec{v_i}$. On munit l'espace d'un repère orthonormé $(Oxy)$ de centre $O$ le centre du billard et **tel que chaque boule ait un rayon de 1**.
 
 ## Contacts
 
@@ -61,11 +61,7 @@ S'applique sur une boule $B_i$ ne choquant pas :
 Le principe fondamental de la dynamique appliqué à la boule $B_i$ (ne choquant pas, elle peut être assimilée à un point) :
 
 $$
-\begin{cases}
-\frac{d^2x}{dt^2} = -\alpha \times \frac{dx}{dt}
-\\\\
-\frac{d^2y}{dt^2} = -\alpha \times \frac{dy}{dt}
-\end{cases}
+\frac{d^2x}{dt^2} = -\alpha \times \frac{dx}{dt} \quad \text{ et } \quad \frac{d^2y}{dt^2} = -\alpha \times \frac{dy}{dt}
 $$
 
 ### Etude d'un choc avec un mur
@@ -107,3 +103,44 @@ L'échantillon de temps est $\Delta t = 1 ms$. Tout évènement d'une durée inf
 ## Calcul des positions et vitesses des boules
 
 Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](#représentations)
+
+L'algorithme utilisé est sembable à celui d'Euler explicite.
+
+
+# Application JAVA
+
+Voir les instructions d'[installation](#installation-java-9) et de [lancement](lancement).
+
+## Applications intégrées
+
+Pour simplifier les usages et éviter la redondance, un système d'applications internes a été mis en place. Par défaut, le lancement sans argument renvoie sur l'application help.
+
+Ces applications sont :
+
+- help : Permet d'obtenir de l'aide
+- game : Lance une partie classique avec possibilité de faire jouer l'ordinateur
+- statistic : Calcule différents statistiques sur les simulations.
+
+Pour lancer une application, il faut soit quitter l'application en cours (fermer la fenêtre), soit taper dans la console :
+
+> app=ID [ARGS]
+
+Par exemple, écrire dans la console `app=game` va lancer l'application Game.
+
+### Help
+
+Permet de lancer les autres applications et d'apporter des informations supplémentaires sur les différents paramètres de lancement.
+
+### Game
+
+Application classique d'un billard jouable. Utiliser la barre d'espace pour lancer un calcul du meilleur coup.
+
+Chercher dans l'application help les différentes descriptions des arguments.
+
+### Statistic
+
+Permet de faire varier le nombre de simulations par position pour trouver un meilleur coup. Renvoie des fichiers `.statistic` pouvant être affichés par le programme python.
+
+## Gestion des données
+
+Todo
