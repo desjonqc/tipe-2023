@@ -1,5 +1,7 @@
 # TIPE 2023
+
 ## Introduction
+
 Ce projet de TIPE est une modélisation d'un billard américain. L'objectif de celui-ci est de déterminer le meilleur coup à jouer pour une position donnée.
 Pour cela, une première approche a été la simulation d'un grand nombre de lancers. Le programme récupérait alors celui offrant un meilleur score final.
 
@@ -8,16 +10,20 @@ Cette méthode, bien qu'accélérée par l'utilisation d'OpenCL reste néanmoins
 L'objectif à terme de ce projet est de réunir à l'aide de cette première approche suffisamment de données pour entrainer un réseau de neurones ayant la capacité de substituer cette approche.
 
 ## Installation (Java 9)
+
 Installer préalablement Java 9. Télécharger la dernière version compilée du projet, vous êtes prêt à l'utiliser !
 
 ## Lancement
+
 Plusieurs choix s'offre à vous pour lancer le programme. Celui-ci est constitué de plusieurs applications différentes.
 
 Pour lancer le programme et tomber sur l'interface d'aide, exécutez simplement
+
 > java -jar &#60;nom du jar&#62;.jar
 
 L'interface d'aide permet d'afficher les différents arguments de lancement à votre disposition.
 Vous pouvez les inscrire directement dans la commande de lancement sans passer par l'aide :
+
 > java -jar &#60;nom du jar&#62;.jar app=game [...]
 
 Lors de la fermeture des éventuelles fenêtres, vous allez être redirigé vers la console. Tapez 'quit' pour tuer le programme.
@@ -25,22 +31,75 @@ Lors de la fermeture des éventuelles fenêtres, vous allez être redirigé vers
 # Modélisation Physique
 
 ## Boules
-Les boules sont considérées comme sphériques. On suppose qu'elles n'évoluent que dans un espace à 2 dimensions.
+
+Les boules sont considérées comme parfaitement sphériques. On suppose qu'elles n'évoluent que dans un espace à 2 dimensions.
+
+### Notations
+
+On numérote chaque boule $B_i$ avec un indice $i \in [0; 15]$. On associe alors à la boule $B_i$ la position $\vec{r_i}$ et la vitesse $\vec{v_i}$. On munit l'espace d'un repère orthonormé $(Oxy)$ de centre $O$ le centre du billard et tel que chaque boule ait un rayon de 1.
 
 ## Contacts
-Les contacts entre une boule et un mur sont sans perte d'énergie et respecte les lois de Snell-Descartes de la réflexion.
 
-Les contacts entre une boule A et une boule B sont également sans perte d'énergie. Le transfert d'énergie d'une boule à l'autre est total, selon le vecteur AB.
+Les contacts entre une boule et un mur sont sans perte d'énergie, instantanés et respectent les lois de Snell-Descartes de la réflexion.
+
+Les contacts entre une boule $B_i$ et une boule $B_j$ sont également sans perte d'énergie : le transfert d'énergie d'une boule à l'autre est total.
 
 ## Frottements
-Les frottements avec le sol et l'air sont modélisés par une force de frottement fluide de paramètre $\alpha$ (paramétrable)
 
+Les frottements avec le sol et l'air sont modélisés par une force de frottement fluide de paramètre massique $\alpha$ (paramétrable)
+
+## Etude des intéractions
+
+### Bilan des forces appliquées (Hors choc)
+
+S'applique sur une boule $B_i$ ne choquant pas :
+
+- Une force de frottements fluides : $\vec{f_i} = -\alpha \times m \times \vec{v_i}$
+
+### Equations vérifiées (Hors choc)
+
+Le principe fondamental de la dynamique appliqué à la boule $B_i$ (ne choquant pas, elle peut être assimilée à un point) :
+
+$$
+\begin{cases}
+\frac{d^2x}{dt^2} = -\alpha \times \frac{dx}{dt}
+\\\\
+\frac{d^2y}{dt^2} = -\alpha \times \frac{dy}{dt}
+\end{cases}
+$$
+
+### Etude d'un choc avec un mur
+
+On considère un mur dirigé par un vecteur unitaire $\vec{u}$. Lors d'un contact entre la boule $B_i$ et ce mur, la vitesse $\vec{v_i}$ change instantanément de $\vec{v_i}^-$ à $\vec{v_i}^+$ : $\vec{v_i}^+ = 2 \times \vec{u} \times (\vec{u} \cdot \vec{v_i}^-) - \vec{v_i}^-$
+
+### Etude d'un choc avec une boule
+
+On considère le choc instantané entre deux boules $B_i$ et $B_j$ où $i \neq j$. Ce choc n'a de sens que si $||\vec{r_i} - \vec{r_j}|| \leq 2$.
+
+On pose $\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2}$
+
+Il vient alors :
+
+$$
+\begin{cases}
+v_{i,x}^+ = v_{i,x}^- + \delta_x \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta} \\\\ v_{i,y}^+ = v_{i,y}^- + \delta_x \times (\vec{v_j}^- - \vec{v_i}^-) \cdot \vec{\delta}
+\end{cases}
+\quad \text{ et } \quad
+\begin{cases}
+v_{j,x}^+ = v_{j,x}^- + \delta_x \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta} \\\\ v_{j,y}^+ = v_{j,y}^- + \delta_x \times (\vec{v_i}^- - \vec{v_j}^-) \cdot \vec{\delta}
+\end{cases}
+$$
 
 # Simulation
 
+## Représentations
+
+Un billard est représenté numériquement par un tableau de dimension $5$ et de taille $16$ (paramétrable) : Pour chaque boule $B_i$, il en faut 2 pour représenter $\vec{r_i}$, 2 pour représenter $\vec{v_i}$ et une pour enregistrer des propriétés propres à la boule (par exemple si la boule est entrée dans un trou). Ce tableau est représenté numériquement par un `float[]` de taille $5 \times 16 = 80$.
+
 ## Echantillonnage temporel
-Le temps est échantillonné en millisecondes. tout évènement d'une durée inférieure à une milliseconde est négligé.
 
-## Principe
-L'algorithme utilisé est semblable à l'algorithme d'Euler. A chaque mise à jour de la simulation, est ajouté à la position de chaque boule $\Delta t\*v$, et à la vitesse de la boule $-\alpha*v$
+L'échantillon de temps est $\Delta t = 1 ms$. Tout évènement d'une durée inférieure à $\Delta t$ est négligé.
 
+## Calcul des positions et vitesses des boules
+
+Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle.

@@ -223,7 +223,7 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
 
     float2 positionOffset = position;
     float2 velocityOffset = velocity;
-    for (int j = 0; j < getComponent4(balls.shape, 1); j++) {
+    for (int j = 0; j < balls.shape.y; j++) {
         if (j == get_global_id(0)) {
             continue;
         }
