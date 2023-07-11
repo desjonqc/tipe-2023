@@ -1,5 +1,7 @@
 package com.cegesoft.data;
 
+import com.cegesoft.data.exception.ParseFromFileException;
+import com.cegesoft.data.exception.StorageInitialisationException;
 import com.cegesoft.game.SimulationInformation;
 import lombok.Getter;
 
@@ -26,13 +28,13 @@ public class Storage {
         }
     }
 
-    public Storage(ByteStorable... groups) {
+    public Storage(ByteStorable... groups) throws StorageInitialisationException {
         this(getGroupSize(groups), parseBytes(groups));
     }
 
-    public Storage(Storage base, ByteStorable... groups) {
+    public Storage(Storage base, ByteStorable... groups) throws StorageInitialisationException {
         if (base.dataGroupSize != getGroupSize(groups))
-            throw new IllegalArgumentException("Data group size mismatch");
+            throw new StorageInitialisationException("Data group size mismatch");
         this.dataGroupSize = base.dataGroupSize;
         this.data = new byte[dataGroupSize * groups.length + base.data.length];
         System.arraycopy(base.data, 0, data, 0, base.data.length);
@@ -41,15 +43,15 @@ public class Storage {
         }
     }
 
-    public Storage addStorable(ByteStorable... groups) {
+    public Storage addStorable(ByteStorable... groups) throws StorageInitialisationException {
         return new Storage(this, groups);
     }
 
-    private static int getGroupSize(ByteStorable... groups) {
+    private static int getGroupSize(ByteStorable... groups) throws StorageInitialisationException {
         int size = groups[0].size();
         for (ByteStorable group : groups) {
             if (group.size() != size)
-                throw new IllegalArgumentException("Data group size mismatch");
+                throw new StorageInitialisationException("Data group size mismatch");
         }
         return size;
     }
@@ -68,13 +70,13 @@ public class Storage {
         return result;
     }
 
-    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index, SimulationInformation... simulationInformation) {
+    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index, SimulationInformation... simulationInformation) throws ParseFromFileException {
         try {
             T result = (T) tClass.getDeclaredMethod("empty", SimulationInformation.class).invoke(null, simulationInformation.length == 0 ? null : simulationInformation[0]);
             result.fromBytes(getDataGroup(index));
             return result;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            throw new ParseFromFileException("Can't import data from file to '" + tClass.getName() + "' model", e);
         }
     }
 

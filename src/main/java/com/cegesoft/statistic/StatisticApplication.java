@@ -30,7 +30,7 @@ public class StatisticApplication extends SimulationApplication {
     public void start() throws Exception {
         super.start();
 
-        StorageManager.register(StorageManager.StorageTag.STATISTIC_POSITION, new StorageHandler("python/data/" + StorageManager.StorageTag.STATISTIC_POSITION.getName() + "/", "pos",
+        StorageManager.register(StorageManager.StorageTag.STATISTIC_POSITION, new StorageHandler("python/datastored/" + StorageManager.StorageTag.STATISTIC_POSITION.getName() + "/", "pos",
                 10, 8 * this.getIntProperty(Property.BALL_AMOUNT)));
 
         FileStorage fileStorage = new FileStorage(fileName, 128);
@@ -46,10 +46,10 @@ public class StatisticApplication extends SimulationApplication {
                 MeasurementJobHandler handler = new MeasurementJobHandler(positions, i, j, information);
                 handler.start();
                 handler.join();
-                Logger.getLogger().println("Finished " + i + " " + j);
+                Logger.info("Finished " + i + " " + j);
             }
         }
-        Logger.getLogger().println("Finished");
+        Logger.info("Finished");
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.NICE_PLAY_LOSS).saveFileToNumpy(simulationId, "nice_play_loss", true, coefficients);
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.BAD_PLAY_LOSS).saveFileToNumpy(simulationId, "bad_play_loss", true, coefficients);
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.EQUAL_PLAY_LOSS).saveFileToNumpy(simulationId, "equal_play_loss", true, coefficients);
@@ -67,7 +67,7 @@ public class StatisticApplication extends SimulationApplication {
                 String valueStr = (String) value;
                 String[] coeff_str = valueStr.split(",");
                 if (coeff_str.length != 4) {
-                    Logger.getLogger().println("There must be 4 coefficients.");
+                    Logger.info("There must be 4 coefficients.");
                     return true;
                 }
                 this.coefficients = new int[]{Integer.parseInt(coeff_str[0]), Integer.parseInt(coeff_str[1]), Integer.parseInt(coeff_str[2]), Integer.parseInt(coeff_str[3])};

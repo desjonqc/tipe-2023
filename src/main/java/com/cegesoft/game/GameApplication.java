@@ -17,13 +17,14 @@ import java.util.TimerTask;
 
 public class GameApplication extends SimulationApplication {
 
+    private Timer timer;
     @Override
     public void start() throws Exception {
         super.start();
 
         SimulationInformation information = this.getTProperty(Property.SIMULATION_INFORMATION);
         ScoreWeighting storageWeighting = new ConstantScoreWeighting(new int[]{8}, new int[]{3}, new int[]{4}, true);
-        StorageManager.register(StorageManager.StorageTag.AI_DATA, new FullStorageHandler("python/data/" + StorageManager.StorageTag.AI_DATA.getName() + "/", "data",
+        StorageManager.register(StorageManager.StorageTag.AI_DATA, new FullStorageHandler("python/datastored/" + StorageManager.StorageTag.AI_DATA.getName() + "/", "data",
                 4, information.getDataGroupSize(), information, storageWeighting));
 
         Board board = new Board(this.getTProperty(Property.BOARD_CONFIGURATION), Board.INITIAL_POSITION);
@@ -33,7 +34,7 @@ public class GameApplication extends SimulationApplication {
         new GameFrame(board);
 
         // Création du processus de simulation
-        Timer timer = new Timer();
+        timer = new Timer();
 
         // Lorsque l'application est fermée, on libère les ressources
         Runtime.getRuntime().addShutdownHook(new Thread(timer::cancel));
@@ -44,5 +45,11 @@ public class GameApplication extends SimulationApplication {
                 board.tick();
             }
         }, 0L, (long) (Board.TIME_STEP * 1000));
+    }
+
+    @Override
+    public void stop() {
+        timer.cancel();
+        StorageManager.unregister(StorageManager.StorageTag.AI_DATA);
     }
 }

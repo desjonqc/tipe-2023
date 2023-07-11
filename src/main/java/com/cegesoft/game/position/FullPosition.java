@@ -1,6 +1,7 @@
 package com.cegesoft.game.position;
 
 import com.cegesoft.data.ByteStorable;
+import com.cegesoft.data.FileMetadata;
 import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.util.ByteArrayConverter;
 import lombok.Getter;
@@ -57,6 +58,11 @@ public class FullPosition implements ByteStorable {
     @Override
     public int size() {
         return this.position.size() + this.results.length * this.simulationInformation.getUnitSize();
+    }
+
+    @Override
+    public FileMetadata getMetadata() {
+        return null;
     }
 
     public static FullPosition empty(SimulationInformation information) {

@@ -3,10 +3,10 @@ package com.cegesoft.simulation.implementation;
 import com.cegesoft.Main;
 import com.cegesoft.app.property.Property;
 import com.cegesoft.data.handlers.FullStorageHandler;
-import com.cegesoft.data.handlers.StorageHandler;
 import com.cegesoft.game.BoardConfiguration;
 import com.cegesoft.game.BoardSimulation;
 import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.log.Logger;
 import com.cegesoft.simulation.Job;
 import com.cegesoft.simulation.MultipleJobHandler;
@@ -39,7 +39,7 @@ public class DeepProportionateJobHandler extends MultipleJobHandler {
         }
         if (!lastJob.isDone()) {
             counter.decrement();
-            return new Job[] {lastJob};
+            return new Job[]{lastJob};
         }
         List<Integer> goodScores = lastJob.getExecutable().getResults(1);
         List<Integer> equalScores = lastJob.getExecutable().getResults(0);
@@ -59,28 +59,36 @@ public class DeepProportionateJobHandler extends MultipleJobHandler {
         BoardConfiguration configuration = Main.getTProperty(Property.BOARD_CONFIGURATION);
         int simulationTime = Main.getIntProperty(Property.SIMULATION_TIME);
 
-        for (int i = 0; i < goodScoreAmount; i++) {
-            jobs[i] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(goodScores.get(i)), information), simulationTime);
+        try {
+            for (int i = 0; i < goodScoreAmount; i++) {
+                jobs[i] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(goodScores.get(i)), information), simulationTime);
+            }
+            for (int i = 0; i < equalScoreAmount; i++) {
+                jobs[i + goodScoreAmount] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(equalScores.get(i)), information), simulationTime);
+            }
+            for (int i = 0; i < badScoreAmount; i++) {
+                jobs[i + goodScoreAmount + equalScoreAmount] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(badScores.get(i)), information), simulationTime);
+            }
+        } catch (BoardParsingException e) {
+            Logger.error(e);
         }
-        for (int i = 0; i < equalScoreAmount; i++) {
-            jobs[i + goodScoreAmount] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(equalScores.get(i)), information), simulationTime);
-        }
-        for (int i = 0; i < badScoreAmount; i++) {
-            jobs[i + goodScoreAmount + equalScoreAmount] = new Job(new BoardSimulation(configuration, lastJob.getExecutable().getBoardPosition(badScores.get(i)), information), simulationTime);
-        }
-        Logger.getLogger().println(jobs.length + " jobs created at depth " + counter.getDepth());
+        Logger.info(jobs.length + " jobs created at depth " + counter.getDepth());
         return jobs;
     }
 
     @Override
     public void handleResults() {
-        Logger.getLogger().println("End of a part depth " + counter.getDepth());
+        Logger.info("End of a part depth " + counter.getDepth());
         for (Job job : this.jobs) {
-            if (this.handler != null) {
-                this.handler.addStorable(job.getExecutable().getCurrentEvaluation(this.handler.getWeighting()));
+            try {
+                if (this.handler != null) {
+                    this.handler.addStorable(job.getExecutable().getCurrentEvaluation(this.handler.getWeighting()));
+                }
+                DeepProportionateJobHandler jobHandler = new DeepProportionateJobHandler(job, counter.increment(), weighting, information, handler);
+                jobHandler.start();
+            } catch (Exception e) {
+                Logger.error(e);
             }
-            DeepProportionateJobHandler jobHandler = new DeepProportionateJobHandler(job, counter.increment(), weighting, information, handler);
-            jobHandler.start();
         }
     }
 

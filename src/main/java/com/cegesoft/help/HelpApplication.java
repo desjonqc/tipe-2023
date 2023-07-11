@@ -16,31 +16,31 @@ public class HelpApplication extends Application {
     public void start() throws Exception {
         ApplicationsImpl appImpl = ApplicationsImpl.getByTag(applicationId);
         if (appImpl == null && !applicationId.equals("none")) {
-            Logger.getLogger().println("Application '" + applicationId + "' not found.");
+            Logger.info("Application '" + applicationId + "' not found.");
             return;
         }
-        Logger.getLogger().println("============= HELP =============");
+        Logger.info("============= HELP =============");
         if (appImpl == null) {
-            Logger.getLogger().println("Usage : app={ApplicationID} to start an application.");
-            Logger.getLogger().println("Applications available :");
+            Logger.info("Usage : app={ApplicationID} to start an application.");
+            Logger.info("Applications available :");
             for (ApplicationsImpl impl : ApplicationsImpl.values()) {
-                Logger.getLogger().println("\t - " + impl.getTag() + " : " + impl.getDescription());
+                Logger.info("\t - " + impl.getTag() + " : " + impl.getDescription());
             }
-            Logger.getLogger().println("Use (app=help) --apph={ApplicationID} for more informations about an application.");
-            Logger.getLogger().println("Note : (Optional) | [Startup Command] | {Placeholder}.");
+            Logger.info("Use (app=help) --apph={ApplicationID} for more informations about an application.");
+            Logger.info("Note : (Optional) | [Startup Command] | {Placeholder}.");
         } else {
-            Logger.getLogger().println("[HELP] Usage : app=" + applicationId + " --{ARGS}");
-            Logger.getLogger().println("Argument list :");
+            Logger.info("[HELP] Usage : app=" + applicationId + " --{ARGS}");
+            Logger.info("Argument list :");
             for (ApplicationArgument<?> argument : appImpl.getApplication().getArguments()) {
-                Logger.getLogger().println("\t• " + argument.getPrefix());
-                Logger.getLogger().println("\t\t - " + (argument.isRequired() ? ConsoleColors.RED_BOLD + "R" : "Not r") + "equired" + ConsoleColors.RESET);
-                Logger.getLogger().println("\t\t - Description : " + argument.getDescription());
+                Logger.info("\t• " + argument.getPrefix());
+                Logger.info("\t\t - " + (argument.isRequired() ? ConsoleColors.RED_BOLD + "R" : "Not r") + "equired" + ConsoleColors.RESET);
+                Logger.info("\t\t - Description : " + argument.getDescription());
             }
         }
 
-        Logger.getLogger().println("================================");
+        Logger.info("================================");
 
-        Logger.getLogger().println("");
+        Logger.info("");
 
         Main.listenCommand();
     }

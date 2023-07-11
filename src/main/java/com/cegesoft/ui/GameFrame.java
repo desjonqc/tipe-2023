@@ -1,7 +1,9 @@
 package com.cegesoft.ui;
 
 import com.cegesoft.Main;
+import com.cegesoft.app.ApplicationsImpl;
 import com.cegesoft.game.Board;
+import com.cegesoft.log.Logger;
 import com.cegesoft.ui.panels.ClassicGamePanel;
 import lombok.Getter;
 
@@ -30,16 +32,13 @@ public class GameFrame extends JFrame {
         this.setContentPane(this.classicGamePanel = new ClassicGamePanel(this, board));
         this.classicGamePanel.registerListeners();
 
-        if (System.console() != null) {
+        if (Main.CONSOLE_RUN) {
             this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             this.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                    try {
-                        Main.listenCommand();
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
+                    Main.CURRENT_APPLICATION.stop();
+                    Main.listenCommand();
                 }
             });
         } else {

@@ -106,6 +106,10 @@ Le calcul de résolution des équations précédentes est effectué dans le fich
 
 L'algorithme utilisé est sembable à celui d'Euler explicite.
 
+## Estimation du meilleur coup
+
+On considère une position de billard donnée. Dans un premier temps, l'estimation du meilleur coup s'effectue en testant un grand nombre de possibilités.
+
 
 # Application JAVA
 
@@ -121,7 +125,7 @@ Ces applications sont :
 - game : Lance une partie classique avec possibilité de faire jouer l'ordinateur
 - statistic : Calcule différents statistiques sur les simulations.
 
-Pour lancer une application, il faut soit quitter l'application en cours (fermer la fenêtre), soit taper dans la console :
+Pour lancer une application, il faut quitter l'application en cours (fermer la fenêtre java), et taper dans la console :
 
 > app=ID [ARGS]
 
@@ -129,7 +133,7 @@ Par exemple, écrire dans la console `app=game` va lancer l'application Game.
 
 ### Help
 
-Permet de lancer les autres applications et d'apporter des informations supplémentaires sur les différents paramètres de lancement.
+Permet de lancer les autres applications et d'apporter des informations supplémentaires sur les différents paramètres de lancement des applications.
 
 ### Game
 

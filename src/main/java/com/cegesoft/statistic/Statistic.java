@@ -1,6 +1,7 @@
 package com.cegesoft.statistic;
 
 import com.cegesoft.util.NDArrayUtil;
+import com.cegesoft.util.exception.IndiceDimensionException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -27,7 +28,7 @@ public class Statistic {
         return values[index];
     }
 
-    public Value getOrCreateValue(int[] indices) {
+    public Value getOrCreateValue(int[] indices) throws IndiceDimensionException {
         return this.getOrCreateValue(key.getIndex(indices));
     }
 
@@ -64,7 +65,7 @@ public class Statistic {
     }
 
     public void saveFileToNumpy(int simulationId, String name, boolean normalize, int[] coefficients) throws IOException {
-        File file = new File("python/data/simulation-" + simulationId + "/" + name + ".statistic");
+        File file = new File("python/datastored/simulation-" + simulationId + "/" + name + ".statistic");
         if (file.getParentFile() != null && !file.getParentFile().exists()) {
             if (!file.getParentFile().mkdirs())
                 throw new IOException("Could not create parent directories!");
@@ -85,9 +86,9 @@ public class Statistic {
         @Getter
         private final int[] shape;
 
-        public int getIndex(int[] indices) {
+        public int getIndex(int[] indices) throws IndiceDimensionException {
             if (indices.length != dimension) {
-                throw new IllegalArgumentException("Indices length must be equal to dimension!");
+                throw new IndiceDimensionException("Indices length must be equal to dimension!");
             }
             return NDArrayUtil.getIndex(shape, indices);
         }

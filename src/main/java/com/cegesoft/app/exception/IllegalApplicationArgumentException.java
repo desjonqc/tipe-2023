@@ -2,10 +2,10 @@ package com.cegesoft.app.exception;
 
 import com.cegesoft.app.argument.ApplicationArgument;
 
-public class IllegalApplicationArgumentException extends RuntimeException{
+public class IllegalApplicationArgumentException extends IllegalArgumentException {
 
-    public IllegalApplicationArgumentException(ApplicationArgument<?> argument, Exception e) {
-        super("Wrong argument value for " + argument.getPrefix(), e);
+    public IllegalApplicationArgumentException(String message, Exception e) {
+        super(message, e);
     }
 
 }

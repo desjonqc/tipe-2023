@@ -1,5 +1,6 @@
 package com.cegesoft.simulation;
 
+import com.cegesoft.log.Logger;
 import lombok.Getter;
 
 public class Job extends Thread {
@@ -28,7 +29,8 @@ public class Job extends Thread {
 
     public IJobExecutable getExecutable() {
         if (!done) {
-            throw new IllegalStateException("Job is not done yet!");
+            Logger.error("Job is not done yet!");
+            return null;
         }
         return executable;
     }

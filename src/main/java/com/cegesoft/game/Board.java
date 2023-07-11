@@ -1,6 +1,8 @@
 package com.cegesoft.game;
 
 import com.cegesoft.Main;
+import com.cegesoft.app.property.Property;
+import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.log.Logger;
 import com.cegesoft.opencl.CLFunction;
@@ -10,27 +12,39 @@ import org.bridj.Pointer;
 
 public class Board extends BoardStructure {
 
-    public static final BoardPosition INITIAL_POSITION = new BoardPosition(new float[]{
-            -35, 0, 0, 0f,
-            20, 0, 0f, 0,
+    public static final BoardPosition INITIAL_POSITION;
 
-            21.75f, 1.25f, 0, 0,
-            21.75f, -1.25f, 0, 0,
+    static {
+        BoardPosition pos = null;
+        try {
+            pos = new BoardPosition(new float[]{
+                    -35, 0, 0, 0f,
+                    20, 0, 0f, 0,
 
-            23.5f, 2.5f, -0, 0,
-            23.5f, 0, -0, 0,
-            23.5f, -2.5f, -0, 0,
+                    21.75f, 1.25f, 0, 0,
+                    21.75f, -1.25f, 0, 0,
 
-            25.25f, 3.75f, 0, 0,
-            25.25f, 1.25f, 0, 0,
-            25.25f, -1.25f, 0, 0,
-            25.25f, -3.75f, 0, 0,
+                    23.5f, 2.5f, -0, 0,
+                    23.5f, 0, -0, 0,
+                    23.5f, -2.5f, -0, 0,
 
-            27, -5, 0, 0,
-            27, -2.5f, -0, 0,
-            27, 0, 0, 0,
-            27, 2.5f, -0, 0,
-            27, 5, 0, 0}, (i, j) -> i + 4 * j);
+                    25.25f, 3.75f, 0, 0,
+                    25.25f, 1.25f, 0, 0,
+                    25.25f, -1.25f, 0, 0,
+                    25.25f, -3.75f, 0, 0,
+
+                    27, -5, 0, 0,
+                    27, -2.5f, -0, 0,
+                    27, 0, 0, 0,
+                    27, 2.5f, -0, 0,
+                    27, 5, 0, 0}, (i, j) -> i + 4 * j);
+        } catch (BoardParsingException e) {
+            Logger.error(e);
+        } finally {
+            INITIAL_POSITION = pos;
+        }
+    }
+
     public static boolean bestShot = false;
     private int stopCounter = 0;
     private boolean firstEmptyTick = true;
@@ -65,12 +79,12 @@ public class Board extends BoardStructure {
     }
 
     public boolean everyBallStopped() {
-        if (currentGameInformation[0] != 0) {
-            stopCounter = 0;
-        } else {
-            stopCounter++;
+        Pointer<Float> pointer = this.ballsField.getArgument().read(queue);
+        for (int i = 0; i < Main.getIntProperty(Property.BALL_AMOUNT); i++) {
+            if (pointer.get((long) i * BoardStructure.BALL_BUFFER_SIZE + 2) != 0 || pointer.get((long) i * BoardStructure.BALL_BUFFER_SIZE + 3) != 0)
+                return false;
         }
-        return stopCounter > 20;
+        return true;
     }
 
     public void tick() {
@@ -96,11 +110,11 @@ public class Board extends BoardStructure {
                 ballsField.setValue(queue, 4, 0.0f);
             }
             if (currentGameInformation[1] > 0) {
-                Logger.getLogger().println("Player 1 won");
+                Logger.info("Player 1 won");
             } else if (currentGameInformation[1] < 0) {
-                Logger.getLogger().println("Player 2 won");
+                Logger.info("Player 2 won");
             } else {
-                Logger.getLogger().println("Draw");
+                Logger.info("Draw");
             }
         }
     }
@@ -126,7 +140,7 @@ public class Board extends BoardStructure {
         GameFrame.getFrameInstance().repaint();
     }
 
-    public BoardPosition savePosition() {
+    public BoardPosition savePosition() throws BoardParsingException {
         return new BoardPosition(this);
     }
 }

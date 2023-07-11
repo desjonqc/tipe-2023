@@ -3,7 +3,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 
-from file_manager import read_statistic_files, StatisticFile
+from statistics.statistic_file_manager import read_statistic_files, StatisticFile
 
 def plot_3D_graphs(file: StatisticFile):
     plt.figure()
@@ -37,7 +37,7 @@ def plot_directory(directory: str):
     plt.show()
 
 def plot_simulation(id: int):
-    plot_directory(r"data\simulation-" + str(id))
+    plot_directory(r"datastored\simulation-" + str(id))
 
 
 plot_simulation(3)

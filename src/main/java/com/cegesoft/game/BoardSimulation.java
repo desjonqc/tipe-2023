@@ -1,5 +1,6 @@
 package com.cegesoft.game;
 
+import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.position.FullPosition;
 import com.cegesoft.game.position.PositionResult;
@@ -9,6 +10,7 @@ import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.simulation.IJobExecutable;
 import com.cegesoft.util.NDArrayUtil;
+import com.cegesoft.util.exception.IndiceDimensionException;
 import com.cegesoft.util.weighting.ScoreWeighting;
 import org.bridj.Pointer;
 
@@ -53,7 +55,7 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
         CLFunction function1 = new CLFunction(this.file, "copy_buffer", boardPosition.toBufferField(this.handler, this.queue), this.ballsField, this.ballBufferSizeField, this.ballsAmountField, this.anglesField, this.debugField);
         function1.call(this.queue, new int[] {this.ballsAmountField.getArgument(), this.information.getAnglePartition(), this.information.getNormPartition()}).waitFor();
     }
-    public float[] getBallInformation(int angle, int norm, int i) {
+    public float[] getBallInformation(int angle, int norm, int i) throws IndiceDimensionException {
         Pointer<Float> pointer = this.ballsField.getArgument().read(this.queue);
         float[] info = new float[BoardStructure.BALL_BUFFER_SIZE];
         for (int j = 0; j < BoardStructure.BALL_BUFFER_SIZE; j++) {
@@ -108,13 +110,13 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
     }
 
     @Override
-    public BoardPosition getBoardPosition(int resultIndex) {
+    public BoardPosition getBoardPosition(int resultIndex) throws BoardParsingException {
         int[] indices = this.getIndices(resultIndex);
         return new BoardPosition(this.ballsField, new NDArrayUtil.SimulationParametrizedIndex(indices[1], indices[2], BALL_DATA_SHAPE), this.queue);
     }
 
     @Override
-    public FullPosition getCurrentEvaluation(ScoreWeighting weighting) {
+    public FullPosition getCurrentEvaluation(ScoreWeighting weighting) throws IllegalArgumentException, IllegalStateException {
         if (this.initialPosition == null)
             throw new IllegalStateException("Initial position has never been set");
         if (weighting.getWeighting(-1)[0] + weighting.getWeighting(0)[0] + weighting.getWeighting(1)[0] != this.information.getResultsLimit())

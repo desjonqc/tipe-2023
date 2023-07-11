@@ -16,29 +16,33 @@ import java.util.Scanner;
 public class Main {
 
     public static Scanner scanner;
+    public static boolean CONSOLE_RUN = false;
 
     public static Application CURRENT_APPLICATION;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        CONSOLE_RUN = (args.length >= 1 && args[0].startsWith("--ideLaunch")) || System.console() != null;
         scanner = new Scanner(System.in);
+
         handleCommand(args);
 
         Runtime.getRuntime().addShutdownHook(new Thread(CURRENT_APPLICATION::stop));
     }
 
-    public static void listenCommand() throws Exception {
-        Logger.getLogger().print("> ");
-        while (!handleCommand(scanner.nextLine().split(" ")))
-            Logger.getLogger().print("> ");
+    public static void listenCommand() {
+        Logger.print("> ");
+        String s;
+        while ((s = scanner.nextLine()).equals("") || !handleCommand(s.split(" ")))
+            Logger.print("> ");
     }
 
-    public static boolean handleCommand(String[] args) throws Exception {
-        if (args.length == 1 && args[0].equalsIgnoreCase("quit")){
+    public static boolean handleCommand(String[] args) {
+        if (args.length == 1 && args[0].equalsIgnoreCase("quit")) {
             System.exit(0);
             return true;
         }
 
-        ApplicationsImpl currentApplication = System.console() != null ? ApplicationsImpl.HELP : ApplicationsImpl.GAME;
+        ApplicationsImpl currentApplication = CONSOLE_RUN ? ApplicationsImpl.HELP : ApplicationsImpl.GAME;
 
         for (String arg : args) {
             if (arg.startsWith("app=")) {
@@ -46,17 +50,27 @@ public class Main {
                 try {
                     currentApplication = ApplicationsImpl.valueOf(applicationName);
                 } catch (Exception ignored) {
-                    Logger.getLogger().warn("Application '" + applicationName + "' does not exist. Skipping to default");
+                    Logger.warn("Application '" + applicationName + "' does not exist. Skipping to default");
                 }
             }
         }
 
         CURRENT_APPLICATION = currentApplication.getApplication();
-        if (CURRENT_APPLICATION.readArguments(args)) {
+        try {
+            if (CURRENT_APPLICATION.readArguments(args)) {
+                return false;
+            }
+        } catch (IllegalArgumentException e) {
+            Logger.error("Can't convert argument's type : " + e.getMessage());
             return false;
         }
 
-        CURRENT_APPLICATION.start();
+        try {
+            CURRENT_APPLICATION.start();
+        } catch (Exception e) {
+            Logger.error("Can't start properly app '" + currentApplication.getTag() + "' : " + e.getMessage());
+            return false;
+        }
         return true;
     }
 

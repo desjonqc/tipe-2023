@@ -1,8 +1,7 @@
 package com.cegesoft.ui;
 
 import com.cegesoft.game.Board;
-import com.cegesoft.ui.GameFrame;
-import org.w3c.dom.Attr;
+import com.cegesoft.log.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,9 +9,7 @@ import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.awt.geom.Arc2D;
 import java.io.IOException;
-import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-import java.util.function.Function;
 
 public abstract class AbstractGamePanel extends JPanel {
     public static final Color GREEN = new Color(64, 152, 68);
@@ -26,6 +23,7 @@ public abstract class AbstractGamePanel extends JPanel {
 
     private final Image background;
     private final Polygon[] borders = new Polygon[6];
+
     public AbstractGamePanel(GameFrame frame, Board board) {
         this.frame = frame;
         this.board = board;
@@ -43,17 +41,23 @@ public abstract class AbstractGamePanel extends JPanel {
         registerVerticalBorders(1, holeDiameter, 4);
         registerVerticalBorders(-1, holeDiameter, 5);
 
+        Image background = null;
         try {
             background = ImageIO.read(ClassLoader.getSystemResource("wood.png"));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Logger.error("Can't load background image :", e);
+            System.exit(-1);
+        } finally {
+            this.background = background;
         }
     }
 
     public abstract float[] getBallInformation(int i);
+
     public abstract String getTitle();
 
     public abstract void registerListeners();
+
     public abstract void unregisterListeners();
 
     @Override

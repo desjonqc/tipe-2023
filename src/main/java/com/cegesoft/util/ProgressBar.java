@@ -6,7 +6,7 @@ public class ProgressBar {
     private static final int progressBarWidth = 100;
     public static void printProgress(int done, int total) {
         float percent = (progressBarWidth * ((float) done / (float) total));
-        StringBuffer buffer = new StringBuffer(progressBarWidth + 10);
+        StringBuilder buffer = new StringBuilder(progressBarWidth + 10);
         buffer.append("[");
         for (int i = 0; i < progressBarWidth; i++) {
             if (i < (int)percent || (done + 1 == total)) {
@@ -21,7 +21,7 @@ public class ProgressBar {
         if (done + 1 == total) {
             buffer.append("\n");
         }
-        Logger.getLogger().print("\r" + buffer);
+        Logger.print("\r" + buffer);
     }
 
 }

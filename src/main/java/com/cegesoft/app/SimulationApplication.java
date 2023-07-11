@@ -38,7 +38,7 @@ public class SimulationApplication extends Application {
             case "partition":
                 String[] partitions = ((String) value).split(",");
                 if (partitions.length != 2) {
-                    Logger.getLogger().println("La partition doit contenir 2 valeurs (séparées par ,)");
+                    Logger.info("La partition doit contenir 2 valeurs (séparées par ,)");
                     return true;
                 }
                 this.anglePartition = Integer.parseInt(partitions[0]);

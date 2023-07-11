@@ -10,6 +10,8 @@ public interface ByteStorable {
 
     int size();
 
+    FileMetadata getMetadata();
+
     static ByteStorable empty(SimulationInformation simulationInformation) {
         throw new IllegalStateException("empty function not implemented");
     }

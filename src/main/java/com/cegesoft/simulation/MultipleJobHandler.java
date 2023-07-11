@@ -2,7 +2,6 @@ package com.cegesoft.simulation;
 
 import com.cegesoft.log.Logger;
 import com.cegesoft.util.ProgressBar;
-import lombok.Getter;
 
 public abstract class MultipleJobHandler extends Thread {
     protected Job[] jobs;
@@ -53,8 +52,8 @@ public abstract class MultipleJobHandler extends Thread {
                 e.printStackTrace();
             }
         }
-        Logger.getLogger().print("\n");
+        Logger.print("\n");
         this.handleResults();
-        Logger.getLogger().println("Jobs completed in " + (System.currentTimeMillis() - start) + "ms");
+        Logger.info("Jobs completed in " + (System.currentTimeMillis() - start) + "ms");
     }
 }

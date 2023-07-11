@@ -1,7 +1,9 @@
 package com.cegesoft.game.position;
 
 import com.cegesoft.data.ByteStorable;
+import com.cegesoft.data.FileMetadata;
 import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.log.Logger;
 import com.cegesoft.util.ByteArrayConverter;
 import lombok.Getter;
 
@@ -23,7 +25,8 @@ public class PositionResult implements ByteStorable {
         this.norm = norm;
         this.result = result;
         if (this.size() > 4) {
-            throw new IllegalArgumentException("Result size is too big!");
+            Logger.error("Position Result size is too big !");
+            System.exit(-1);
         }
     }
 
@@ -75,6 +78,11 @@ public class PositionResult implements ByteStorable {
     @Override
     public int size() {
         return this.simulationInformation.getUnitSize();
+    }
+
+    @Override
+    public FileMetadata getMetadata() {
+        return null;
     }
 
     public static PositionResult empty(SimulationInformation simulationInformation) {

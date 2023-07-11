@@ -1,5 +1,6 @@
 package com.cegesoft.simulation;
 
+import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.position.FullPosition;
 import com.cegesoft.util.weighting.ScoreWeighting;
@@ -19,7 +20,7 @@ public interface IJobExecutable {
      */
     List<Integer> getResults(int score);
 
-    BoardPosition getBoardPosition(int resultIndex);
+    BoardPosition getBoardPosition(int resultIndex) throws BoardParsingException;
 
     FullPosition getCurrentEvaluation(ScoreWeighting weighting);
 

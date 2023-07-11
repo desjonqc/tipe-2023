@@ -34,10 +34,10 @@ public class SingleSolverJobHandler extends MultipleJobHandler {
         float bestAngle = simulation.getAngle(bestShot);
         float bestScore = simulation.getScore(bestShot);
         float bestNorm = simulation.getNorm(bestShot);
-        Logger.getLogger().println("Angle : " + bestAngle);
-        Logger.getLogger().println("Norme : " + bestNorm);
-        Logger.getLogger().println("Score : " + bestScore);
-        Logger.getLogger().println("Temps : " + (System.currentTimeMillis() - start) + "ms");
+        Logger.info("Angle : " + bestAngle);
+        Logger.info("Norme : " + bestNorm);
+        Logger.info("Score : " + bestScore);
+        Logger.info("Temps : " + (System.currentTimeMillis() - start) + "ms");
 
         Main.<Board>getTProperty(Property.MAIN_BOARD).setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
         Board.bestShot = false;

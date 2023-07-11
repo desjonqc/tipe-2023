@@ -18,7 +18,7 @@ public abstract class ArgumentsReader {
         this.arguments.add(argument);
     }
 
-    public boolean readArguments(String[] args) {
+    public boolean readArguments(String[] args) throws IllegalArgumentException {
         for (ApplicationArgument<?> argument : arguments) {
             boolean found = false;
             for (String arg : args) {
@@ -31,7 +31,7 @@ public abstract class ArgumentsReader {
                 }
             }
             if (!found && argument.isRequired()) {
-                Logger.getLogger().println("Required application argument missing : " + argument.getPrefix());
+                Logger.info("Required application argument missing : " + argument.getPrefix());
                 return true;
             }
             if (!found && this.readArgumentOrProperty(argument, argument.getDefaultValue()))
@@ -56,7 +56,7 @@ public abstract class ArgumentsReader {
      */
     protected abstract boolean readArgument(ApplicationArgument<?> argument, Object value);
 
-    private Object convertArgumentType(ApplicationArgument<?> argument, String strValue) {
+    private Object convertArgumentType(ApplicationArgument<?> argument, String strValue) throws IllegalArgumentException {
         Class<?> tClass = argument.getDefaultValue().getClass();
         Object value = null;
         try {
@@ -70,7 +70,7 @@ public abstract class ArgumentsReader {
                 value = tClass.getDeclaredMethod("valueOf", String.class).invoke(null, strValue.toUpperCase());
             }
         }catch (Exception e) {
-            throw new IllegalApplicationArgumentException(argument, e);
+            throw new IllegalApplicationArgumentException("Wrong argument value for " + argument.getPrefix() + ". '" + strValue + "' should be " + tClass.getName(), e);
         }
 
         if (value == null) {
