@@ -72,7 +72,11 @@ On considère un mur dirigé par un vecteur unitaire $\vec{u}$. Lors d'un contac
 
 On considère le choc instantané entre deux boules $B_i$ et $B_j$ où $i \neq j$. Ce choc n'a de sens que si $||\vec{r_i} - \vec{r_j}|| \leq 2$.
 
-On pose $\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2} = \begin{pmatrix}\delta_x\cr\delta_y\cr\end{pmatrix}$
+On pose :
+
+$$
+\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2} = \begin{pmatrix} \delta_x \cr \delta_y \cr \end{pmatrix} 
+$$
 
 Il vient alors :
 
