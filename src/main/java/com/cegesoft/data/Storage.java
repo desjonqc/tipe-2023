@@ -2,7 +2,8 @@ package com.cegesoft.data;
 
 import com.cegesoft.data.exception.ParseFromFileException;
 import com.cegesoft.data.exception.StorageInitialisationException;
-import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.data.exception.WrongFileMetadataException;
+import com.cegesoft.data.metadata.FileMetadata;
 import lombok.Getter;
 
 import java.lang.reflect.InvocationTargetException;
@@ -10,36 +11,36 @@ import java.lang.reflect.InvocationTargetException;
 public class Storage {
 
     @Getter
-    private final int dataGroupSize;
+    private final FileMetadata metadata;
     @Getter
     private final byte[] data;
 
-    public Storage(int dataGroupSize, byte[] data) {
-        this.dataGroupSize = dataGroupSize;
+    public Storage(FileMetadata metadata, byte[] data) {
+        this.metadata = metadata;
         this.data = data;
     }
 
-    public Storage(int dataGroupSize, byte[][] groups) {
-        this.dataGroupSize = dataGroupSize;
+    public Storage(FileMetadata metadata, byte[][] groups) {
+        this.metadata = metadata;
 
-        this.data = new byte[dataGroupSize * groups.length];
+        this.data = new byte[metadata.getDataGroupSize() * groups.length];
         for (int i = 0; i < groups.length; i++) {
-            System.arraycopy(groups[i], 0, data, i * dataGroupSize, dataGroupSize);
+            System.arraycopy(groups[i], 0, data, i * metadata.getDataGroupSize(), metadata.getDataGroupSize());
         }
     }
 
     public Storage(ByteStorable... groups) throws StorageInitialisationException {
-        this(getGroupSize(groups), parseBytes(groups));
+        this(getCommonMetadata(groups), parseBytes(groups));
     }
 
     public Storage(Storage base, ByteStorable... groups) throws StorageInitialisationException {
-        if (base.dataGroupSize != getGroupSize(groups))
+        if (!base.getMetadata().equals(getCommonMetadata(groups)))
             throw new StorageInitialisationException("Data group size mismatch");
-        this.dataGroupSize = base.dataGroupSize;
-        this.data = new byte[dataGroupSize * groups.length + base.data.length];
+        this.metadata = base.getMetadata();
+        this.data = new byte[metadata.getDataGroupSize() * groups.length + base.data.length];
         System.arraycopy(base.data, 0, data, 0, base.data.length);
         for (int i = 0; i < groups.length; i++) {
-            System.arraycopy(groups[i].toBytes(), 0, data, base.data.length + i * dataGroupSize, dataGroupSize);
+            System.arraycopy(groups[i].toBytes(), 0, data, base.data.length + i * metadata.getDataGroupSize(), metadata.getDataGroupSize());
         }
     }
 
@@ -47,13 +48,13 @@ public class Storage {
         return new Storage(this, groups);
     }
 
-    private static int getGroupSize(ByteStorable... groups) throws StorageInitialisationException {
-        int size = groups[0].size();
+    private static FileMetadata getCommonMetadata(ByteStorable... groups) throws StorageInitialisationException {
+        FileMetadata meta = groups[0].getMetadata();
         for (ByteStorable group : groups) {
-            if (group.size() != size)
+            if (!group.getMetadata().equals(meta))
                 throw new StorageInitialisationException("Data group size mismatch");
         }
-        return size;
+        return meta;
     }
 
     private static byte[][] parseBytes(ByteStorable... groups) {
@@ -65,23 +66,26 @@ public class Storage {
     }
 
     public byte[] getDataGroup(int index) {
-        byte[] result = new byte[dataGroupSize];
-        System.arraycopy(data, index * dataGroupSize, result, 0, dataGroupSize);
+        byte[] result = new byte[this.metadata.getDataGroupSize()];
+        System.arraycopy(data, index * this.metadata.getDataGroupSize(), result, 0, this.metadata.getDataGroupSize());
         return result;
     }
 
-    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index, SimulationInformation... simulationInformation) throws ParseFromFileException {
+    public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index) throws ParseFromFileException {
         try {
-            T result = (T) tClass.getDeclaredMethod("empty", SimulationInformation.class).invoke(null, simulationInformation.length == 0 ? null : simulationInformation[0]);
+            T result = (T) tClass.getDeclaredMethod("empty").invoke(null);
+            result.setMetadata(this.metadata);
             result.fromBytes(getDataGroup(index));
             return result;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new ParseFromFileException("Can't import data from file to '" + tClass.getName() + "' model", e);
+        } catch (WrongFileMetadataException e) {
+            throw new ParseFromFileException("Incompatible metadata. Good luck...", e);
         }
     }
 
     public int getGroupsAmount() {
-        return this.data.length / this.dataGroupSize;
+        return this.data.length / this.metadata.getDataGroupSize();
     }
 
 }

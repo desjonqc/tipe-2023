@@ -7,6 +7,7 @@ import com.cegesoft.data.FileStorage;
 import com.cegesoft.data.Storage;
 import com.cegesoft.data.StorageManager;
 import com.cegesoft.data.handlers.StorageHandler;
+import com.cegesoft.data.metadata.DefaultFileMetadata;
 import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.log.Logger;
@@ -31,9 +32,9 @@ public class StatisticApplication extends SimulationApplication {
         super.start();
 
         StorageManager.register(StorageManager.StorageTag.STATISTIC_POSITION, new StorageHandler("python/datastored/" + StorageManager.StorageTag.STATISTIC_POSITION.getName() + "/", "pos",
-                10, 8 * this.getIntProperty(Property.BALL_AMOUNT)));
+                10, DefaultFileMetadata.class));
 
-        FileStorage fileStorage = new FileStorage(fileName, 128);
+        FileStorage<DefaultFileMetadata> fileStorage = new FileStorage<>(fileName, DefaultFileMetadata.class);
         Storage storage = fileStorage.read();
         BoardPosition[] positions = new BoardPosition[positionAmount];
         for (int i = 0; i < positions.length; i++) {

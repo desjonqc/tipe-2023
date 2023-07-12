@@ -1,30 +1,31 @@
 package com.cegesoft.game.position;
 
 import com.cegesoft.data.ByteStorable;
-import com.cegesoft.data.FileMetadata;
-import com.cegesoft.game.SimulationInformation;
-import com.cegesoft.util.ByteArrayConverter;
+import com.cegesoft.data.exception.WrongFileMetadataException;
+import com.cegesoft.data.metadata.FileMetadata;
+import com.cegesoft.data.metadata.SimulationFileMetadata;
 import lombok.Getter;
 
 public class FullPosition implements ByteStorable {
 
     @Getter
-    private final SimulationInformation simulationInformation;
-    @Getter
     private BoardPosition position;
     @Getter
     private PositionResult[] results;
+    private SimulationFileMetadata metadata;
 
-    public FullPosition(SimulationInformation information, BoardPosition position, PositionResult[] results) {
+    public FullPosition(BoardPosition position, PositionResult[] results, SimulationFileMetadata metadata) {
         this.position = position;
         this.results = results;
-        this.simulationInformation = information;
+        this.metadata = metadata;
     }
 
-    private FullPosition(SimulationInformation simulationInformation) {
-        this.simulationInformation = simulationInformation;
+    private FullPosition() {
     }
 
+    public static FullPosition empty() {
+        return new FullPosition();
+    }
 
     @Override
     public byte[] toBytes() {
@@ -39,33 +40,36 @@ public class FullPosition implements ByteStorable {
 
     @Override
     public void fromBytes(byte[] bytes) {
-        this.position = BoardPosition.empty(this.simulationInformation);
+        this.position = BoardPosition.empty();
         byte[] positionBytes = new byte[this.position.size()];
         System.arraycopy(bytes, 0, positionBytes, 0, this.position.size());
         this.position.fromBytes(positionBytes);
-        int unitSize = this.simulationInformation.getUnitSize();
+        int unitSize = this.metadata.getInformation().getUnitSize();
         this.results = new PositionResult[(bytes.length - this.position.size()) / unitSize];
         byte[] resultBytes = new byte[bytes.length - this.position.size()];
         System.arraycopy(bytes, this.position.size(), resultBytes, 0, bytes.length - this.position.size());
         for (int i = 0; i < this.results.length; i++) {
             byte[] unitData = new byte[unitSize];
             System.arraycopy(resultBytes, i * unitSize, unitData, 0, unitSize);
-            this.results[i] = PositionResult.empty(this.simulationInformation);
+            this.results[i] = PositionResult.empty();
             this.results[i].fromBytes(unitData);
         }
     }
 
     @Override
     public int size() {
-        return this.position.size() + this.results.length * this.simulationInformation.getUnitSize();
+        return this.position.size() + this.results.length * this.metadata.getInformation().getUnitSize();
     }
 
     @Override
     public FileMetadata getMetadata() {
-        return null;
+        return metadata;
     }
 
-    public static FullPosition empty(SimulationInformation information) {
-        return new FullPosition(information);
+    @Override
+    public void setMetadata(FileMetadata meta) throws WrongFileMetadataException {
+        if (!(meta instanceof SimulationFileMetadata))
+            throw new WrongFileMetadataException("FullPosition's metadata must be a SimulationFileMetadata");
+        this.metadata = (SimulationFileMetadata) meta;
     }
 }

@@ -1,5 +1,6 @@
 package com.cegesoft.game;
 
+import com.cegesoft.data.metadata.SimulationFileMetadata;
 import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.game.position.FullPosition;
@@ -139,7 +140,7 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
             int limit = weighting.getWeighting(i)[0];
             PositionResult[] resultArray = result.map(j -> {
                 int[] indices = this.getIndices(j);
-                return new PositionResult(this.information, indices[1], indices[2], (short)this.getScore(j));
+                return new PositionResult(indices[1], indices[2], (short)this.getScore(j));
             }).limit(limit).toArray(PositionResult[]::new);
             if (resultArray.length == 0)
                 continue;
@@ -147,6 +148,6 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
             currentIndex += limit;
         }
 
-        return new FullPosition(this.information, this.initialPosition, results);
+        return new FullPosition(this.initialPosition, results, new SimulationFileMetadata(this.information));
     }
 }

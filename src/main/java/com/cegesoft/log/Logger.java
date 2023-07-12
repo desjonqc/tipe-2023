@@ -43,10 +43,15 @@ public class Logger {
         logger.println(ConsoleColors.YELLOW_BOLD + "[WARNING] " + ConsoleColors.RESET + ConsoleColors.YELLOW + message + ConsoleColors.RESET);
     }
 
+    public static void warn(Exception e) {
+        warn(e.getMessage());
+        if (e.getCause() != null)
+            warn("Caused by : " + e.getCause().getMessage());
+    }
+
     public static void warn(String message, Exception e) {
-        logger.println(ConsoleColors.YELLOW_BOLD + "[WARNING] " + ConsoleColors.RESET + ConsoleColors.YELLOW + message);
-        e.printStackTrace();
-        logger.print_(ConsoleColors.RESET);
+        warn(message);
+        warn(e);
     }
 
     public static void error(String message) {

@@ -3,10 +3,10 @@ package com.cegesoft.game.position;
 import com.cegesoft.Main;
 import com.cegesoft.app.property.Property;
 import com.cegesoft.data.ByteStorable;
-import com.cegesoft.data.FileMetadata;
+import com.cegesoft.data.metadata.DefaultFileMetadata;
+import com.cegesoft.data.metadata.FileMetadata;
 import com.cegesoft.game.Board;
 import com.cegesoft.game.BoardStructure;
-import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.opencl.CLBufferField;
 import com.cegesoft.opencl.CLHandler;
@@ -25,9 +25,11 @@ public class BoardPosition implements ByteStorable {
 
     @Getter
     private final float[] position;
+    private FileMetadata metadata;
 
     public BoardPosition(float[] position, NDArrayUtil.ParametrizedIndex index) throws BoardParsingException {
         this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
+        this.metadata = new DefaultFileMetadata(this.size());
         try {
             for (int i = 0; i < Main.getIntProperty(Property.BALL_AMOUNT); i++) {
                 this.position[2 * i] = position[index.getIndex(0, i)];
@@ -54,6 +56,10 @@ public class BoardPosition implements ByteStorable {
         this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
     }
 
+    public static BoardPosition empty() {
+        return new BoardPosition();
+    }
+
     public float[] getBallPosition(int ball) {
         return new float[]{position[2 * ball], position[2 * ball + 1]};
     }
@@ -75,11 +81,12 @@ public class BoardPosition implements ByteStorable {
 
     @Override
     public FileMetadata getMetadata() {
-        return null;
+        return metadata;
     }
 
-    public static BoardPosition empty(SimulationInformation information) {
-        return new BoardPosition();
+    @Override
+    public void setMetadata(FileMetadata meta) {
+        this.metadata = meta;
     }
 
     public CLBufferField<Float> toBufferField(CLHandler handler, CLQueue queue) {

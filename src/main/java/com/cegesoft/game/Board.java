@@ -46,7 +46,6 @@ public class Board extends BoardStructure {
     }
 
     public static boolean bestShot = false;
-    private int stopCounter = 0;
     private boolean firstEmptyTick = true;
 
     public Board(CLHandler handler, float height, float width, int ballsAmount, float alpha) {
@@ -125,7 +124,6 @@ public class Board extends BoardStructure {
         pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE + 2, vx);
         pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE + 3, vy);
         this.getCurrentGameInformation()[0] = (float) Math.sqrt(vx * vx + vy * vy);
-        this.stopCounter = 0;
         this.ballsField.getArgument().write(this.getQueue(), pointer, false).waitFor();
     }
 

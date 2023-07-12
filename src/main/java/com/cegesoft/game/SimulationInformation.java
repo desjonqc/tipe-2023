@@ -7,6 +7,8 @@ import com.cegesoft.util.ByteArrayConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Objects;
+
 @AllArgsConstructor
 public class SimulationInformation {
 
@@ -46,5 +48,18 @@ public class SimulationInformation {
 
     public int getDataGroupSize() {
         return 8 * Main.getIntProperty(Property.BALL_AMOUNT) + this.getUnitSize() * this.getResultsLimit();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SimulationInformation that = (SimulationInformation) o;
+        return anglePartition == that.anglePartition && normPartition == that.normPartition && resultsLimit == that.resultsLimit;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(anglePartition, normPartition, resultsLimit);
     }
 }

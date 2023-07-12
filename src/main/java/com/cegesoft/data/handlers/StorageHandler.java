@@ -5,7 +5,7 @@ import com.cegesoft.data.FileStorage;
 import com.cegesoft.data.Storage;
 import com.cegesoft.data.exception.ParseFromFileException;
 import com.cegesoft.data.exception.StorageInitialisationException;
-import com.cegesoft.game.SimulationInformation;
+import com.cegesoft.data.metadata.FileMetadata;
 import com.cegesoft.log.Logger;
 import lombok.Getter;
 
@@ -21,24 +21,18 @@ public class StorageHandler {
     @Getter
     private final String baseDirectoryPath;
     @Getter
-    private final int dataGroupSize;
-    @Getter
     private final String extension;
-    private final ArrayList<FileStorage> storages = new ArrayList<>();
-    @Getter
-    protected SimulationInformation information;
+    private final ArrayList<FileStorage<?>> storages = new ArrayList<>();
     private int currentId;
 
-    public StorageHandler(String baseDirectoryPath, String extension, int maxStorableInAFile, int dataGroupSize) throws StorageInitialisationException {
+    public StorageHandler(String baseDirectoryPath, String extension, int maxStorableInAFile, Class<? extends FileMetadata> metaClass) throws StorageInitialisationException {
         this.maxStorableInAFile = maxStorableInAFile;
         this.baseDirectoryPath = baseDirectoryPath;
-        this.dataGroupSize = dataGroupSize;
         this.extension = extension;
-        this.information = null;
-        this.initStorages();
+        this.initStorages(metaClass);
     }
 
-    private void initStorages() throws StorageInitialisationException {
+    private void initStorages(Class<? extends FileMetadata> metaClass) throws StorageInitialisationException {
         File directory = new File(this.baseDirectoryPath);
         if (!directory.exists()) {
             directory.mkdirs();
@@ -56,13 +50,13 @@ public class StorageHandler {
                         Logger.warn("Skipping " + file.getName());
                         continue;
                     }
-                    FileStorage fileStorage = new FileStorage(file.getPath(), this.dataGroupSize);
+                    FileStorage<?> fileStorage = new FileStorage<>(file.getPath(), metaClass);
                     Storage storage = fileStorage.read();
                     storages.add(id, fileStorage);
                     if (currentId <= id)
                         currentId = id + (storage.getGroupsAmount() < this.maxStorableInAFile ? 0 : 1);
                 } catch (IOException e) {
-                    Logger.warn("Can't load data from " + file.getName() + ". Skipping");
+                    Logger.warn("Can't load data from " + file.getName() + ". Skipping", e);
                 }
             }
         }
@@ -72,33 +66,35 @@ public class StorageHandler {
 
     public void addStorable(ByteStorable storable) {
         if (storages.size() != 0) {
-            FileStorage fileStorage = this.storages.get(this.currentId);
+            FileStorage<?> fileStorage = this.storages.get(this.currentId);
             try {
                 Storage storage = fileStorage.read();
                 if (storage.getGroupsAmount() < this.maxStorableInAFile) {
                     Storage newStorage = storage.addStorable(storable);
                     fileStorage.write(newStorage);
                     Logger.info("Stored new data in " + fileStorage.getFile().getName() + " !");
+                    return;
                 }
-                currentId++;
             } catch (IOException e) {
                 Logger.error("Can't edit current file :", e);
+                return;
             } catch (StorageInitialisationException e) {
                 Logger.error("Can't merge storages :", e);
+                return;
             }
-            return;
+            currentId++;
         }
         Logger.info("Current file is full, creating a new one...");
         try {
             Storage storage = new Storage(storable);
-            if (storage.getDataGroupSize() != this.dataGroupSize) {
-                Logger.error("Can't add new Storable, data group size mismatch");
+            if (storages.size() > 0 && !storage.getMetadata().equals(storages.get(0).getMetadata())) {
+                Logger.error("Can't add new Storable, metadata mismatch");
                 return;
             }
 
             try {
                 File file = new File(this.baseDirectoryPath, currentId + "." + extension);
-                FileStorage fileStorage = new FileStorage(file.getPath(), this.dataGroupSize);
+                FileStorage<?> fileStorage = new FileStorage<>(file.getPath(), storable.getMetadata());
                 this.storages.add(currentId, fileStorage);
                 fileStorage.write(storage);
                 Logger.info("Stored new data in " + file.getName() + " !");
@@ -116,11 +112,11 @@ public class StorageHandler {
 
     public <T extends ByteStorable> List<T> listStorable(Class<T> tClass) {
         List<T> storableList = new ArrayList<>();
-        for (FileStorage fileStorage : this.storages) {
+        for (FileStorage<?> fileStorage : this.storages) {
             try {
                 Storage storage = fileStorage.read();
                 for (int i = 0; i < storage.getGroupsAmount(); i++) {
-                    storableList.add(storage.getDataGroup(tClass, i, this.information));
+                    storableList.add(storage.getDataGroup(tClass, i));
                 }
             } catch (IOException e) {
                 Logger.error("Unable to read data file :", e);

@@ -2,6 +2,7 @@ package com.cegesoft.data.handlers;
 
 import com.cegesoft.TestApp;
 import com.cegesoft.data.exception.StorageInitialisationException;
+import com.cegesoft.data.metadata.DefaultFileMetadata;
 import com.cegesoft.game.Board;
 import com.cegesoft.game.position.BoardPosition;
 import junit.framework.Assert;
@@ -18,13 +19,13 @@ public class StorageHandlerTest extends TestCase {
     }
 
     public void testHandler() throws StorageInitialisationException {
-        StorageHandler handler = new StorageHandler("test/", "data", 3, 128);
+        StorageHandler handler = new StorageHandler("test/", "data", 3, DefaultFileMetadata.class);
         handler.addStorable(Board.INITIAL_POSITION);
         handler.addStorable(Board.INITIAL_POSITION);
         handler.addStorable(Board.INITIAL_POSITION);
         handler.addStorable(Board.INITIAL_POSITION);
 
-        StorageHandler handler2 = new StorageHandler("test/", "data", 3, 128);
+        StorageHandler handler2 = new StorageHandler("test/", "data", 3, DefaultFileMetadata.class);
         List<BoardPosition> positions = handler2.listStorable(BoardPosition.class);
         Assert.assertEquals(positions.size(), 4);
         for (int i = 0; i < 4; i++)
