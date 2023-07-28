@@ -110,7 +110,7 @@ public class ClassicGamePanel extends AbstractGamePanel {
 
                 if (evt.getKeyCode() == KeyEvent.VK_R) {
                     StorageHandler handler = StorageManager.get(StorageManager.StorageTag.AI_DATA);
-                    frame.setCurrentPanel(new DataReaderPanel(frame, board, handler.listStorable(FullPosition.class)));
+                    frame.setCurrentPanel(new DataReaderPanel(frame, board, handler.getReader(FullPosition.class)));
                 }
             } catch (Exception e) {
                 Logger.error(e);

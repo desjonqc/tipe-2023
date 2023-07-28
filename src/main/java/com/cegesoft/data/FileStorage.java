@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -70,7 +71,7 @@ public class FileStorage<T extends FileMetadata> {
         return new Storage(this.metadata, data);
     }
 
-    private T readMetadata() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private T readMetadata() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
         DataInputStream in = new DataInputStream(Files.newInputStream(file.toPath()));
         byte[] dataSize = new byte[4];
         if (in.read(dataSize, 0, 4) != 4)
@@ -79,7 +80,9 @@ public class FileStorage<T extends FileMetadata> {
         byte[] metaBytes = new byte[metaSize];
         if (in.read(metaBytes, 0, metaSize) != metaSize)
             throw new IOException("Corrupted file.");
-        T metadata = (T) metaClass.getDeclaredMethod("empty").invoke(null);
+        Constructor<T> constructor = metaClass.getConstructor();
+        constructor.setAccessible(true);
+        T metadata = constructor.newInstance();
         metadata.fromBytes(metaBytes);
         return metadata;
     }

@@ -16,8 +16,14 @@ import java.util.Scanner;
 public class Main {
 
     public static Scanner scanner;
+    /**
+     * Indique si le programme est lancé en mode console
+     */
     public static boolean CONSOLE_RUN = false;
 
+    /**
+     * Application en cours d'exécution
+     */
     public static Application CURRENT_APPLICATION;
 
     public static void main(String[] args) {
@@ -29,6 +35,9 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(CURRENT_APPLICATION::stop));
     }
 
+    /**
+     * Ecoute les commandes entrées par l'utilisateur. Boucle jusqu'à ce que la commande soit correcte
+     */
     public static void listenCommand() {
         Logger.print("> ");
         String s;
@@ -36,6 +45,12 @@ public class Main {
             Logger.print("> ");
     }
 
+    /**
+     * Gère la commande entrée par l'utilisateur
+     *
+     * @param args Arguments de la commande : Entrée coupée par les espaces
+     * @return true si la commande est correcte, false sinon
+     */
     public static boolean handleCommand(String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("quit")) {
             System.exit(0);
@@ -46,11 +61,11 @@ public class Main {
 
         for (String arg : args) {
             if (arg.startsWith("app=")) {
-                String applicationName = arg.split("=")[1].toUpperCase();
+                String applicationId = arg.split("=")[1].toLowerCase();
                 try {
-                    currentApplication = ApplicationsImpl.valueOf(applicationName);
+                    currentApplication = ApplicationsImpl.getByTag(applicationId);
                 } catch (Exception ignored) {
-                    Logger.warn("Application '" + applicationName + "' does not exist. Skipping to default");
+                    Logger.warn("Application '" + applicationId + "' does not exist. Skipping to default");
                 }
             }
         }
@@ -68,21 +83,39 @@ public class Main {
         try {
             CURRENT_APPLICATION.start();
         } catch (Exception e) {
-            Logger.error("Can't start properly app '" + currentApplication.getTag() + "' : " + e.getMessage());
+            Logger.error("Can't start properly app '" + currentApplication.getTag() + "'", e);
             return false;
         }
         return true;
     }
 
 
+    /**
+     * Récupère la valeur d'une propriété
+     *
+     * @param property Propriété à récupérer
+     * @return Valeur de la propriété
+     */
     public static int getIntProperty(Property property) {
         return CURRENT_APPLICATION.getIntProperty(property);
     }
 
+    /**
+     * Récupère la valeur d'une propriété
+     *
+     * @param property Propriété à récupérer
+     * @return Valeur de la propriété
+     */
     public static float getFloatProperty(Property property) {
         return CURRENT_APPLICATION.getFloatProperty(property);
     }
 
+    /**
+     * Récupère la valeur d'une propriété
+     *
+     * @param property Propriété à récupérer
+     * @return Valeur de la propriété
+     */
     public static <T> T getTProperty(Property property) {
         return CURRENT_APPLICATION.getTProperty(property);
     }

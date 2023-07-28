@@ -1,5 +1,6 @@
 package com.cegesoft.statistic;
 
+import com.cegesoft.Main;
 import com.cegesoft.app.SimulationApplication;
 import com.cegesoft.app.argument.ApplicationArgument;
 import com.cegesoft.app.property.Property;
@@ -56,6 +57,14 @@ public class StatisticApplication extends SimulationApplication {
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.EQUAL_PLAY_LOSS).saveFileToNumpy(simulationId, "equal_play_loss", true, coefficients);
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.COMPUTATION_TIME).saveFileToNumpy(simulationId, "computation_time", true, coefficients);
 
+        this.stop();
+        Main.listenCommand();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        StorageManager.unregister(StorageManager.StorageTag.STATISTIC_POSITION);
     }
 
     @Override

@@ -28,7 +28,9 @@ public class StorageManager {
     }
 
     public static void unregister(StorageTag storageTag) {
-        handlers.remove(storageTag);
+        StorageHandler handler = handlers.remove(storageTag);
+        if (handler != null)
+            handler.close();
     }
 
     @AllArgsConstructor

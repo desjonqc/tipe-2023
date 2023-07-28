@@ -21,11 +21,11 @@ public class PositionResult implements ByteStorable {
     private short result;
     private SimulationFileMetadata metadata;
 
-    public PositionResult(int angle, int norm, short result) {
+    public PositionResult(int angle, int norm, short result, SimulationInformation information) {
         this.angle = angle;
         this.norm = norm;
         this.result = result;
-        this.metadata = new SimulationFileMetadata(new SimulationInformation(angle, norm, result));
+        this.metadata = new SimulationFileMetadata(information);
         if (this.size() > 4) {
             Logger.error("Position Result size is too big !");
             System.exit(-1);
@@ -93,7 +93,7 @@ public class PositionResult implements ByteStorable {
         this.metadata = (SimulationFileMetadata) meta;
     }
 
-    public static PositionResult empty() {
-        return new PositionResult();
+    public float[] format() {
+        return new float[] {this.angle, this.norm};
     }
 }

@@ -49,6 +49,7 @@ public class GameApplication extends SimulationApplication {
 
     @Override
     public void stop() {
+        super.stop();
         timer.cancel();
         StorageManager.unregister(StorageManager.StorageTag.AI_DATA);
     }

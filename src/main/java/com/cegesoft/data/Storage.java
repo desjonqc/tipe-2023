@@ -6,6 +6,7 @@ import com.cegesoft.data.exception.WrongFileMetadataException;
 import com.cegesoft.data.metadata.FileMetadata;
 import lombok.Getter;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public class Storage {
@@ -73,11 +74,13 @@ public class Storage {
 
     public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index) throws ParseFromFileException {
         try {
-            T result = (T) tClass.getDeclaredMethod("empty").invoke(null);
+            Constructor<T> constructor = tClass.getConstructor();
+            constructor.setAccessible(true);
+            T result = constructor.newInstance();
             result.setMetadata(this.metadata);
             result.fromBytes(getDataGroup(index));
             return result;
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | InstantiationException e) {
             throw new ParseFromFileException("Can't import data from file to '" + tClass.getName() + "' model", e);
         } catch (WrongFileMetadataException e) {
             throw new ParseFromFileException("Incompatible metadata. Good luck...", e);

@@ -75,7 +75,7 @@ On considère le choc instantané entre deux boules $B_i$ et $B_j$ où $i \neq j
 On pose :
 
 $$
-\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2} = \begin{pmatrix} \delta_x \cr \delta_y \cr \end{pmatrix} 
+\vec{\delta} = \frac{\vec{r_i} - \vec{r_j}}{2} = \begin{pmatrix} \delta_x \cr \delta_y \cr \end{pmatrix}
 $$
 
 Il vient alors :
@@ -114,7 +114,6 @@ L'algorithme utilisé est sembable à celui d'Euler explicite.
 
 On considère une position de billard donnée. Dans un premier temps, l'estimation du meilleur coup s'effectue en testant un grand nombre de possibilités.
 
-
 # Application JAVA
 
 Voir les instructions d'[installation](#installation-java-9) et de [lancement](lancement).
@@ -151,4 +150,28 @@ Permet de faire varier le nombre de simulations par position pour trouver un mei
 
 ## Gestion des données
 
-Todo
+Cette partie est consacrée à la sauvegarde de position, et au chargement de positions sauvegardées. Cette gestion doit répondre à plusieurs critères :
+
+- L'optimisation de l'espace de stockage pour limiter l'impact des positions sur l'espace de stockage
+- La sauvegarde asynchrone d'informations
+- La segmentation automatique des informations : Chaque fichier contient un nombre limite d'information, le dépassement de cette limite doit engendrer la création d'un nouveau fichier. Cette procédure permet de limiter la corruption des positions sauvegardées lors d'un crash.
+- La lecture "resource-free" des données. L'application ne doit pas placer toute l'information en cache puis la traiter, mais doit charger uniquement ce dont elle a besoin pour limiter l'impact du traitement des données sauvegardées sur la mémoire vive.
+- Une abstraction suffisante pour stocker différents types de données avec le même système de stockage.
+
+
+### Abstraction
+
+Pour répondre à cette nécessité d'abstraction, on ne stocke pas de position en tant que telle, mais on crée une interface `ByteStorable` contenant trois fonctions principales :
+
+- `toBytes()` renvoyant un tableau de byte : Convertit l'objet en tableau de byte
+- `fromBytes(byte[])` renvoyant void : Modifie les propriétés de l'objet avec les informations contenues dans le tableau en argument.
+- `size()` renvoyant un int : Renvoie la taille du tableau renvoyé par toBytes().
+
+Ainsi qu'une propriété de type `FileMetadata` avec un Getter et un Setter.
+
+Toute implémentation devra impérativement comporter un constructeur sans argument, permettant l'appel de la fonction `fromBytes()`.
+
+Finalement, tout objet implémentant cette interface pourra être stockée avec ce système de stockage.
+
+
+### Optimisation de l'espace de stockage

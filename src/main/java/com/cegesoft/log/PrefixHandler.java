@@ -14,6 +14,7 @@ public class PrefixHandler {
         registerPrefix("statistic", ConsoleColors.BLUE_BOLD + "[STATISTIC] " + ConsoleColors.RESET);
         registerPrefix("ui", ConsoleColors.CYAN_BRIGHT + "[GUI] " + ConsoleColors.RESET);
         registerPrefix("app", ConsoleColors.PURPLE_BRIGHT + "[APP] " + ConsoleColors.RESET);
+        registerPrefix("ai", ConsoleColors.RED + "[AI] " + ConsoleColors.RESET);
         registerPrefix("", ConsoleColors.GREEN_BRIGHT + "[COMMAND] " + ConsoleColors.RESET);
     }
 

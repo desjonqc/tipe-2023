@@ -113,7 +113,11 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
     @Override
     public BoardPosition getBoardPosition(int resultIndex) throws BoardParsingException {
         int[] indices = this.getIndices(resultIndex);
-        return new BoardPosition(this.ballsField, new NDArrayUtil.SimulationParametrizedIndex(indices[1], indices[2], BALL_DATA_SHAPE), this.queue);
+        BoardPosition position = new BoardPosition(this.ballsField, new NDArrayUtil.SimulationParametrizedIndex(indices[1], indices[2], BALL_DATA_SHAPE), this.queue);
+        if (position.getPosition()[1] < -this.getHeight() / 2 - 1) {
+            position.setBallCoordinates(0, Board.INITIAL_POSITION.getPosition()[0], 0.0f);
+        }
+        return position;
     }
 
     @Override
@@ -140,7 +144,7 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
             int limit = weighting.getWeighting(i)[0];
             PositionResult[] resultArray = result.map(j -> {
                 int[] indices = this.getIndices(j);
-                return new PositionResult(indices[1], indices[2], (short)this.getScore(j));
+                return new PositionResult(indices[1], indices[2], (short)this.getScore(j), this.information);
             }).limit(limit).toArray(PositionResult[]::new);
             if (resultArray.length == 0)
                 continue;

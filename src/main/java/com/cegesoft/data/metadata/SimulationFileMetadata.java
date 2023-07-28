@@ -17,31 +17,28 @@ public class SimulationFileMetadata extends DefaultFileMetadata {
 
     private SimulationFileMetadata() {}
 
-    public static SimulationFileMetadata empty() {
-        return new SimulationFileMetadata();
-    }
 
     @Override
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(this.size());
-        buffer.putInt(this.dataGroupSize);
-        buffer.putInt(4, this.information.getAnglePartition());
-        buffer.putInt(8, this.information.getNormPartition());
-        buffer.putInt(12, this.information.getResultsLimit());
+        buffer.putShort(this.dataGroupSize);
+        buffer.putInt(2, this.information.getAnglePartition());
+        buffer.putInt(6, this.information.getNormPartition());
+        buffer.putInt(10, this.information.getResultsLimit());
         return buffer.array();
     }
 
     @Override
     public void fromBytes(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        this.dataGroupSize = buffer.getInt(0);
-        this.information = new SimulationInformation(buffer.getInt(4), buffer.getInt(8), buffer.getInt(12));
+        this.dataGroupSize = buffer.getShort(0);
+        this.information = new SimulationInformation(buffer.getInt(2), buffer.getInt(6), buffer.getInt(10));
         super.fromBytes(bytes);
     }
 
     @Override
     public int size() {
-        return 16;
+        return 14;
     }
 
     @Override

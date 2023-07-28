@@ -9,12 +9,15 @@ import com.cegesoft.data.metadata.FileMetadata;
 import com.cegesoft.log.Logger;
 import lombok.Getter;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class StorageHandler {
+public class StorageHandler implements Closeable {
 
     @Getter
     private final int maxStorableInAFile;
@@ -24,8 +27,10 @@ public class StorageHandler {
     private final String extension;
     private final ArrayList<FileStorage<?>> storages = new ArrayList<>();
     private int currentId;
+    private final AsyncStorageRegisterer registerer;
 
     public StorageHandler(String baseDirectoryPath, String extension, int maxStorableInAFile, Class<? extends FileMetadata> metaClass) throws StorageInitialisationException {
+        this.registerer = new AsyncStorageRegisterer();
         this.maxStorableInAFile = maxStorableInAFile;
         this.baseDirectoryPath = baseDirectoryPath;
         this.extension = extension;
@@ -65,6 +70,10 @@ public class StorageHandler {
     }
 
     public void addStorable(ByteStorable storable) {
+        this.registerer.addStorable(storable);
+    }
+
+    private void addStorableSync(ByteStorable storable) {
         if (storages.size() != 0) {
             FileStorage<?> fileStorage = this.storages.get(this.currentId);
             try {
@@ -110,6 +119,7 @@ public class StorageHandler {
         return this.storages.get(i).read();
     }
 
+    @Deprecated
     public <T extends ByteStorable> List<T> listStorable(Class<T> tClass) {
         List<T> storableList = new ArrayList<>();
         for (FileStorage<?> fileStorage : this.storages) {
@@ -125,5 +135,45 @@ public class StorageHandler {
             }
         }
         return storableList;
+    }
+
+    public <T extends ByteStorable> StorageReader<T> getReader(Class<T> tClass) {
+        return new StorageReader<>(this, tClass);
+    }
+
+    public int size() {
+        return this.storages.size();
+    }
+
+    @Override
+    public void close() {
+        this.registerer.interrupt();
+    }
+
+    private class AsyncStorageRegisterer extends Thread {
+
+        private final Queue<ByteStorable> storableQueue = new ConcurrentLinkedQueue<>();
+
+        public AsyncStorageRegisterer() {
+            this.start();
+        }
+
+        public void addStorable(ByteStorable storable) {
+            this.storableQueue.add(storable);
+        }
+
+        @Override
+        public void run() {
+            ByteStorable storable;
+            while (!this.isInterrupted()) {
+                while ((storable = storableQueue.poll()) != null) {
+                    try {
+                        StorageHandler.this.addStorableSync(storable);
+                    } catch (Exception e) {
+                        Logger.error("Unable to store storable :", e);
+                    }
+                }
+            }
+        }
     }
 }

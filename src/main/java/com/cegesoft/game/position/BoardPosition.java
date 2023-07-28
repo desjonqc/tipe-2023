@@ -21,7 +21,7 @@ import org.bridj.Pointer;
 
 import java.util.Arrays;
 
-public class BoardPosition implements ByteStorable {
+public class BoardPosition implements IPositionContainer {
 
     @Getter
     private final float[] position;
@@ -29,7 +29,7 @@ public class BoardPosition implements ByteStorable {
 
     public BoardPosition(float[] position, NDArrayUtil.ParametrizedIndex index) throws BoardParsingException {
         this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
-        this.metadata = new DefaultFileMetadata(this.size());
+        this.metadata = new DefaultFileMetadata((short) this.size());
         try {
             for (int i = 0; i < Main.getIntProperty(Property.BALL_AMOUNT); i++) {
                 this.position[2 * i] = position[index.getIndex(0, i)];
@@ -52,12 +52,8 @@ public class BoardPosition implements ByteStorable {
         this(board.getBallsField(), (i, j) -> i + BoardStructure.BALL_BUFFER_SIZE * j, board.getQueue());
     }
 
-    private BoardPosition() {
+    public BoardPosition() {
         this.position = new float[2 * Main.getIntProperty(Property.BALL_AMOUNT)];
-    }
-
-    public static BoardPosition empty() {
-        return new BoardPosition();
     }
 
     public float[] getBallPosition(int ball) {
@@ -111,5 +107,16 @@ public class BoardPosition implements ByteStorable {
     @Override
     public int hashCode() {
         return Arrays.hashCode(position);
+    }
+
+    @Override
+    public BoardPosition getBoardPosition() {
+        return this;
+    }
+
+    public BoardPosition setBallCoordinates(int ballId, float x, float y) {
+        this.position[2 * ballId] = x;
+        this.position[2 * ballId + 1] = y;
+        return this;
     }
 }

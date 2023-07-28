@@ -9,31 +9,27 @@ import java.util.Objects;
 public class DefaultFileMetadata implements FileMetadata {
 
     @Getter
-    protected int dataGroupSize;
+    protected short dataGroupSize;
 
-    public DefaultFileMetadata(int dataGroupSize) {
+    public DefaultFileMetadata(short dataGroupSize) {
         this.dataGroupSize = dataGroupSize;
     }
 
     protected DefaultFileMetadata() {}
 
-    public static DefaultFileMetadata empty() {
-        return new DefaultFileMetadata();
-    }
-
     @Override
     public byte[] toBytes() {
-        return ByteBuffer.allocate(4).putInt(this.dataGroupSize).array();
+        return ByteBuffer.allocate(this.size()).putShort(this.dataGroupSize).array();
     }
 
     @Override
     public void fromBytes(byte[] bytes) {
-        this.dataGroupSize = ByteBuffer.wrap(bytes).getInt();
+        this.dataGroupSize = ByteBuffer.wrap(bytes).getShort();
     }
 
     @Override
     public int size() {
-        return 4;
+        return 2;
     }
 
     @Override

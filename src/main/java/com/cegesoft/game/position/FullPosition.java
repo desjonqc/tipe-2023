@@ -1,21 +1,21 @@
 package com.cegesoft.game.position;
 
-import com.cegesoft.data.ByteStorable;
 import com.cegesoft.data.exception.WrongFileMetadataException;
 import com.cegesoft.data.metadata.FileMetadata;
 import com.cegesoft.data.metadata.SimulationFileMetadata;
+import com.cegesoft.log.Logger;
 import lombok.Getter;
 
-public class FullPosition implements ByteStorable {
+public class FullPosition implements IPositionContainer {
 
     @Getter
-    private BoardPosition position;
+    private BoardPosition boardPosition;
     @Getter
     private PositionResult[] results;
     private SimulationFileMetadata metadata;
 
     public FullPosition(BoardPosition position, PositionResult[] results, SimulationFileMetadata metadata) {
-        this.position = position;
+        this.boardPosition = position;
         this.results = results;
         this.metadata = metadata;
     }
@@ -23,42 +23,44 @@ public class FullPosition implements ByteStorable {
     private FullPosition() {
     }
 
-    public static FullPosition empty() {
-        return new FullPosition();
-    }
-
     @Override
     public byte[] toBytes() {
-        byte[] bytes = new byte[this.position.size() + this.results.length * this.results[0].size()];
-        System.arraycopy(this.position.toBytes(), 0, bytes, 0, this.position.size());
+        byte[] bytes = new byte[this.boardPosition.size() + this.results.length * this.results[0].size()];
+        System.arraycopy(this.boardPosition.toBytes(), 0, bytes, 0, this.boardPosition.size());
         for (int i = 0; i < this.results.length; i++) {
             int size = this.results[i].size();
-            System.arraycopy(this.results[i].toBytes(), 0, bytes, this.position.size() + i * size, size);
+            System.arraycopy(this.results[i].toBytes(), 0, bytes, this.boardPosition.size() + i * size, size);
         }
         return bytes;
     }
 
     @Override
     public void fromBytes(byte[] bytes) {
-        this.position = BoardPosition.empty();
-        byte[] positionBytes = new byte[this.position.size()];
-        System.arraycopy(bytes, 0, positionBytes, 0, this.position.size());
-        this.position.fromBytes(positionBytes);
+        this.boardPosition = new BoardPosition();
+        this.boardPosition.setMetadata(this.metadata);
+        byte[] positionBytes = new byte[this.boardPosition.size()];
+        System.arraycopy(bytes, 0, positionBytes, 0, this.boardPosition.size());
+        this.boardPosition.fromBytes(positionBytes);
         int unitSize = this.metadata.getInformation().getUnitSize();
-        this.results = new PositionResult[(bytes.length - this.position.size()) / unitSize];
-        byte[] resultBytes = new byte[bytes.length - this.position.size()];
-        System.arraycopy(bytes, this.position.size(), resultBytes, 0, bytes.length - this.position.size());
+        this.results = new PositionResult[(bytes.length - this.boardPosition.size()) / unitSize];
+        byte[] resultBytes = new byte[bytes.length - this.boardPosition.size()];
+        System.arraycopy(bytes, this.boardPosition.size(), resultBytes, 0, bytes.length - this.boardPosition.size());
         for (int i = 0; i < this.results.length; i++) {
-            byte[] unitData = new byte[unitSize];
-            System.arraycopy(resultBytes, i * unitSize, unitData, 0, unitSize);
-            this.results[i] = PositionResult.empty();
-            this.results[i].fromBytes(unitData);
+            try {
+                byte[] unitData = new byte[unitSize];
+                System.arraycopy(resultBytes, i * unitSize, unitData, 0, unitSize);
+                this.results[i] = new PositionResult();
+                this.results[i].setMetadata(this.metadata);
+                this.results[i].fromBytes(unitData);
+            } catch (WrongFileMetadataException e) {
+                Logger.error("Wrong metadata for FullPosition", e);
+            }
         }
     }
 
     @Override
     public int size() {
-        return this.position.size() + this.results.length * this.metadata.getInformation().getUnitSize();
+        return this.boardPosition.size() + this.results.length * this.metadata.getInformation().getUnitSize();
     }
 
     @Override

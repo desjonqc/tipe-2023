@@ -19,16 +19,14 @@ public class StorageHandlerTest extends TestCase {
     }
 
     public void testHandler() throws StorageInitialisationException {
-        StorageHandler handler = new StorageHandler("test/", "data", 3, DefaultFileMetadata.class);
-        handler.addStorable(Board.INITIAL_POSITION);
-        handler.addStorable(Board.INITIAL_POSITION);
-        handler.addStorable(Board.INITIAL_POSITION);
-        handler.addStorable(Board.INITIAL_POSITION);
+        StorageHandler handler = new StorageHandler("test/", "data", 15, DefaultFileMetadata.class);
+        for (int i = 0; i < 16; i++)
+            handler.addStorable(Board.INITIAL_POSITION);
 
         StorageHandler handler2 = new StorageHandler("test/", "data", 3, DefaultFileMetadata.class);
         List<BoardPosition> positions = handler2.listStorable(BoardPosition.class);
-        Assert.assertEquals(positions.size(), 4);
-        for (int i = 0; i < 4; i++)
+        Assert.assertEquals(positions.size(), 16);
+        for (int i = 0; i < 16; i++)
             Assert.assertEquals(positions.get(i), Board.INITIAL_POSITION);
 
         TestApp.clearDirectory();

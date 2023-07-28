@@ -18,7 +18,7 @@ public class FileStorageTest extends TestCase {
     }
 
     public void testWriteRead() throws IOException, ParseFromFileException, StorageInitialisationException {
-        FileStorage<DefaultFileMetadata> fileStorage = new FileStorage<>("test/write_read.data", new DefaultFileMetadata(128));
+        FileStorage<DefaultFileMetadata> fileStorage = new FileStorage<>("test/write_read.data", new DefaultFileMetadata((short) 128));
         Storage storage = new Storage(Board.INITIAL_POSITION, Board.INITIAL_POSITION);
         fileStorage.write(storage);
 

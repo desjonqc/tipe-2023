@@ -1,15 +1,14 @@
 package com.cegesoft.ui;
 
 import com.cegesoft.Main;
-import com.cegesoft.app.ApplicationsImpl;
 import com.cegesoft.game.Board;
-import com.cegesoft.log.Logger;
 import com.cegesoft.ui.panels.ClassicGamePanel;
 import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.function.Function;
 
 public class GameFrame extends JFrame {
 
@@ -18,9 +17,9 @@ public class GameFrame extends JFrame {
 
     protected final float scale;
     protected final int middleX, middleY;
-    private ClassicGamePanel classicGamePanel;
+    private AbstractGamePanel classicGamePanel;
 
-    public GameFrame(Board board) {
+    public GameFrame(Board board, Function<GameFrame, AbstractGamePanel> defaultPanel) {
         frameInstance = this;
 
         this.scale = 1000 / board.getWidth();
@@ -29,7 +28,7 @@ public class GameFrame extends JFrame {
         this.setLayout(null);
         this.middleX = this.getWidth() / 2;
         this.middleY = this.getHeight() / 2 + 30;
-        this.setContentPane(this.classicGamePanel = new ClassicGamePanel(this, board));
+        this.setContentPane(this.classicGamePanel = defaultPanel.apply(this));
         this.classicGamePanel.registerListeners();
 
         if (Main.CONSOLE_RUN) {
@@ -47,6 +46,10 @@ public class GameFrame extends JFrame {
 
 
         this.setVisible(true);
+    }
+
+    public GameFrame(Board board) {
+        this(board, frame -> new ClassicGamePanel(frame, board));
     }
 
     public void setCurrentPanel(AbstractGamePanel panel) {

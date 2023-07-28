@@ -35,12 +35,16 @@ public class HelpApplication extends Application {
                 Logger.info("\t• " + argument.getPrefix());
                 Logger.info("\t\t - " + (argument.isRequired() ? ConsoleColors.RED_BOLD + "R" : "Not r") + "equired" + ConsoleColors.RESET);
                 Logger.info("\t\t - Description : " + argument.getDescription());
+                if (argument.getDefaultValue() != null)
+                    Logger.info("\t\t - Default value : " + argument.getDefaultValue());
             }
         }
 
         Logger.info("================================");
 
         Logger.info("");
+
+        Logger.info(ConsoleColors.RED_BRIGHT + "Type 'quit' to exit the application." + ConsoleColors.RESET);
 
         Main.listenCommand();
     }

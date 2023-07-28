@@ -46,8 +46,8 @@ public class SimulationInformation {
         return (short) (score - this.scoreOffset);
     }
 
-    public int getDataGroupSize() {
-        return 8 * Main.getIntProperty(Property.BALL_AMOUNT) + this.getUnitSize() * this.getResultsLimit();
+    public short getDataGroupSize() {
+        return (short) (8 * Main.getIntProperty(Property.BALL_AMOUNT) + this.getUnitSize() * this.getResultsLimit());
     }
 
     @Override
