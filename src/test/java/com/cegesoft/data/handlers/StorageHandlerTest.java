@@ -23,11 +23,14 @@ public class StorageHandlerTest extends TestCase {
         for (int i = 0; i < 16; i++)
             handler.addStorable(Board.INITIAL_POSITION);
 
-        StorageHandler handler2 = new StorageHandler("test/", "data", 3, DefaultFileMetadata.class);
+        handler.waitForStore();
+        handler.close();
+        StorageHandler handler2 = new StorageHandler("test/", "data", 15, DefaultFileMetadata.class);
         List<BoardPosition> positions = handler2.listStorable(BoardPosition.class);
-        Assert.assertEquals(positions.size(), 16);
+        Assert.assertEquals(16, positions.size());
         for (int i = 0; i < 16; i++)
             Assert.assertEquals(positions.get(i), Board.INITIAL_POSITION);
+        handler2.close();
 
         TestApp.clearDirectory();
     }

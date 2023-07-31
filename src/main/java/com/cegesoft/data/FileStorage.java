@@ -34,8 +34,8 @@ public class FileStorage<T extends FileMetadata> {
         if (metadata == null) {
             try {
                 this.metadata = this.readMetadata();
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                throw new IOException("Can't create Metadata object with class '" + metaClass.getName() + "'");
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
+                throw new IOException("Can't create Metadata object with class '" + metaClass.getName() + "'", e);
             }
         } else {
             this.metadata = metadata;
@@ -80,7 +80,7 @@ public class FileStorage<T extends FileMetadata> {
         byte[] metaBytes = new byte[metaSize];
         if (in.read(metaBytes, 0, metaSize) != metaSize)
             throw new IOException("Corrupted file.");
-        Constructor<T> constructor = metaClass.getConstructor();
+        Constructor<T> constructor = metaClass.getDeclaredConstructor();
         constructor.setAccessible(true);
         T metadata = constructor.newInstance();
         metadata.fromBytes(metaBytes);

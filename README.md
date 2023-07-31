@@ -52,13 +52,13 @@ Les frottements avec le sol et l'air sont modélisés par une force de frottemen
 
 ### Bilan des forces appliquées (Hors choc)
 
-S'applique sur une boule $B_i$ ne choquant pas :
+S'applique sur une boule $B_i$ de masse $m$ et ne choquant pas :
 
 - Une force de frottements fluides : $\vec{f_i} = -\alpha \times m \times \vec{v_i}$
 
 ### Equations vérifiées (Hors choc)
 
-Le principe fondamental de la dynamique appliqué à la boule $B_i$ (ne choquant pas, elle peut être assimilée à un point) :
+Le principe fondamental de la dynamique appliqué à la boule $B_i$ (ne choquant pas, elle peut être assimilée à un point matériel de masse $m$) :
 
 $$
 \frac{d^2x}{dt^2} = -\alpha \times \frac{dx}{dt} \quad \text{ et } \quad \frac{d^2y}{dt^2} = -\alpha \times \frac{dy}{dt}
@@ -112,7 +112,27 @@ L'algorithme utilisé est sembable à celui d'Euler explicite.
 
 ## Estimation du meilleur coup
 
-On considère une position de billard donnée. Dans un premier temps, l'estimation du meilleur coup s'effectue en testant un grand nombre de possibilités.
+On considère une position de billard donnée. Dans un premier temps, l'estimation du meilleur coup s'effectue en testant un grand nombre de possibilités. On partitionne tous les vecteurs vitesse possibles de la boule blanche en partionnant tous les angles possibles (à $360°$) ainsi que les normes possibles (de $0$ à $300$).
+
+Une étude statistique rapide a permis de sélectionner la taille des partitions pour avoir le plus de bon résultats en proportion du nombre total de simulations. On divise alors le cercle en $500$ angles et la norme en $119$ (de manière homogène).
+
+On obtient alors un total de $500 \times 119 = 59500$ simulations par estimation.
+
+## Résultat de Simulation
+
+À la fin d'une simulation, on appelle **résultat de simulation** (valable pour la suite de ce document) un triplet contenant :
+
+- Le vecteur vitesse de la boule blanche utilisé lors de la simulation : un angle par rapport à l'horizontale, et une norme (tuple de Integers)
+- Un score codé sur 2 octets (short) décrivant l'amélioration de la position après ce coup. Si le coup est jugé bon, le score est positif, négatif sinon.
+
+Pour calculer le score, on additionne des scores suivant les actions qui se déroulent :
+
+- La boule blanche est entrée : $-12$.
+- Une boule pleine est entrée : $11$.
+- Une boule rayée est entrée : $-10$.
+- La boule noire est entrée : $\pm1000$. $+1000$ si toutes les boules pleines sont entrées.
+
+*Par exemple, si la boule $3$ et $15$ sont rentrées sur un unique coup de boule blanche, le score sera de $1$.*
 
 # Application JAVA
 
@@ -158,7 +178,6 @@ Cette partie est consacrée à la sauvegarde de position, et au chargement de po
 - La lecture "resource-free" des données. L'application ne doit pas placer toute l'information en cache puis la traiter, mais doit charger uniquement ce dont elle a besoin pour limiter l'impact du traitement des données sauvegardées sur la mémoire vive.
 - Une abstraction suffisante pour stocker différents types de données avec le même système de stockage.
 
-
 ### Abstraction
 
 Pour répondre à cette nécessité d'abstraction, on ne stocke pas de position en tant que telle, mais on crée une interface `ByteStorable` contenant trois fonctions principales :
@@ -173,5 +192,42 @@ Toute implémentation devra impérativement comporter un constructeur sans argum
 
 Finalement, tout objet implémentant cette interface pourra être stockée avec ce système de stockage.
 
+### Segmentation automatique des informations
+
+L'objectif de ce système de stockage est de permettre de stocker un grand nombre de positions de billard dans un minimum d'espace et de pouvoir naviguer dans ces positions. Chaque position implémente de `ByteStorable` (voir [Abstraction](#abstraction)). On va ensuite regrouper les positions dans un `Storage` qui peut stocker uniquement des `ByteStorable` de même `FileMetadata`, correspondant essantiellement à leur taille sur le disque et aux conditions de simulations (les positions ont une taille fixe, donc peuvent être stockée ainsi).
+
+Chaque Storage représente alors un fichier contenant des positions. Le lien entre `Storage` et le réel stockage dans un fichier se passe au travers de la classe `FileStorage`. Ainsi `Storage` contient les positions en mémoire vive, et `FileStorage` représente un pointeur pour accéder au `Storage`. Manipuler des `FileStorage` ne consomme que très peu d'espace mémoire vive.
+
+Pour regrouper les différents fichiers et effectuer de la segmentation, on utilise la classe `StorageHandler` qui va permettre d'enregistrer un `ByteStorable` en le dispatchant soit dans un fichier non plein (on paramètre au préalable le nombre maximal de `ByteStorable` contenu dans un `Storage`), soit en créant un nouveau fichier (`Storage` et `FileStorage` associé). L'écriture segmentée est donc automatique.
+
+### Lecture "resource-free"
+
+Concernant la lecture, on utilise la classe `StorageReader<ByteStorable>` qui fonctionne comme un `Iterator<ByteStorable>`. Un seul `Storage` est chargé à la fois. On utilise deux indices (l'un est l'indice de la position dans le `Storage`, l'autre est l'indice du `Storage` dans le `StorageHandler`) que l'on fait varier pour obtenir les différents `ByteStorable`.
 
 ### Optimisation de l'espace de stockage
+
+Cette partie s'intéresse au protocole de conversion de l'objet `BoardPosition`, `PositionResult` et `FullPosition`. Ces objets implémentent tous `ByteStorable` et se définissent par :
+
+- `BoardPosition` : Représente une position de Billard, ne prend en compte que la position de chaque boule.
+- `PositionResult` : Représente le [résultat](#resultat-de-simulation) d'une simulation.
+- `FullPosition` : Représente un position et un tableau de résultats.
+
+#### BoardPosition
+
+Un position étant définie par un tableau de $32$ floats, aucune optimisation simple ne peut être appliquée. La taille d'une position est alors fixée à $4 \times 32 = 128$ octets (un float est codé sur $4$ octets).
+
+#### PositionResult
+
+Sur cette partie, une optimisation peut être faite car sur les $3$ valeurs à stocker, quasiment aucune n'ont une valeur suffisante pour justifier de les encoder sur 4 ou 2 octets. Ainsi, suivant la taille des partitions (voir la [description des partitions](#estimation-du-meilleur-coup)), on obtient un majorant pour les deux premiers integers, donc une taille maximale $M_{angle}$ et $M_{norme}$. De même, on majore le score maximal que l'on peut faire en un coup (Rentrer toutes les boules pleines, puis la noire) et on obtient la taille maximal du score $M_{score}$.
+
+Ainsi, on peut coder un PositionResult sur $M_{angle} + M_{norme} + M_{score}$ octets avec le *bitwise*. Cette taille étant nécessairement inférieure ou égale à $4 + 4 + 2 = 10$ octets.
+
+#### FullPosition
+
+Par définition de la classe `FullPosition`, sa représentation binaire n'est que la concaténation d'une `BoardPosition` et d'un tableau de `PositionResult`. Tout est donc mis bout-à-bout, et peut être lu correctement avec la connaissance des tailles sur le disque des différents objets. (Tailles connues grâce à la méthode `size()`)
+
+### Sauvegarde Asynchrone d'informations
+
+Le support de cette fonctionnalité est nécessaire car lors de la génération de positions, on sépare les différentes tâches en différents `Thread`.
+
+La sous-classe `AsyncStorageRegisterer` déclarée à l'intérieur de `StorageHandler` étend de la classe `Thread` et démarre celui-ci au moment de l'appel du constructeur. Il contient une queue (de type `Queue<ByteStorable>`) qui stocke les `ByteStorable` à enregistrer. Le `Thread` parcours en boucle la queue et ajoute chaque élément qu'il rencontre avant de les supprimer de la queue.

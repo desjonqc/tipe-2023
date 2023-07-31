@@ -74,7 +74,7 @@ public class Storage {
 
     public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index) throws ParseFromFileException {
         try {
-            Constructor<T> constructor = tClass.getConstructor();
+            Constructor<T> constructor = tClass.getDeclaredConstructor();
             constructor.setAccessible(true);
             T result = constructor.newInstance();
             result.setMetadata(this.metadata);

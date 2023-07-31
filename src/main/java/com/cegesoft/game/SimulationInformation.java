@@ -13,7 +13,7 @@ import java.util.Objects;
 public class SimulationInformation {
 
     @Getter
-    private final short maxScore = 100;
+    private final short maxScore = 1100;
     @Getter
     private final short scoreOffset = 46;
     @Getter

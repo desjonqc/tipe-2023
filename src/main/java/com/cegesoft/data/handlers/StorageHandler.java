@@ -119,6 +119,10 @@ public class StorageHandler implements Closeable {
         return this.storages.get(i).read();
     }
 
+    public void waitForStore() {
+        this.registerer.waitForStore();
+    }
+
     @Deprecated
     public <T extends ByteStorable> List<T> listStorable(Class<T> tClass) {
         List<T> storableList = new ArrayList<>();
@@ -147,11 +151,13 @@ public class StorageHandler implements Closeable {
 
     @Override
     public void close() {
+        this.waitForStore();
         this.registerer.interrupt();
     }
 
     private class AsyncStorageRegisterer extends Thread {
 
+        private final Object lock = new Object();
         private final Queue<ByteStorable> storableQueue = new ConcurrentLinkedQueue<>();
 
         public AsyncStorageRegisterer() {
@@ -160,6 +166,16 @@ public class StorageHandler implements Closeable {
 
         public void addStorable(ByteStorable storable) {
             this.storableQueue.add(storable);
+        }
+
+        public void waitForStore() {
+            synchronized (lock) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    Logger.error(e);
+                }
+            }
         }
 
         @Override
@@ -172,6 +188,9 @@ public class StorageHandler implements Closeable {
                     } catch (Exception e) {
                         Logger.error("Unable to store storable :", e);
                     }
+                }
+                synchronized (lock) {
+                    lock.notifyAll();
                 }
             }
         }
