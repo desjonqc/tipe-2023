@@ -2,6 +2,9 @@ package com.cegesoft.util;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Classe utilitaire pour convertir des tableaux de nombres en tableau de bytes et inversement.
+ */
 public class ByteArrayConverter {
 
     public static byte[] floatsToBytes(float[] floats) {

@@ -1,9 +1,8 @@
 package com.cegesoft.app;
 
-import com.cegesoft.ai.AITrainingApplication;
-import com.cegesoft.ai.DataGenerationApplication;
 import com.cegesoft.game.GameApplication;
 import com.cegesoft.help.HelpApplication;
+import com.cegesoft.measure.MeasureApplication;
 import com.cegesoft.representation.RepresentationApplication;
 import com.cegesoft.statistic.StatisticApplication;
 import lombok.Getter;
@@ -13,9 +12,8 @@ public enum ApplicationsImpl {
     HELP("help", new HelpApplication(), "Help interface"),
     GAME("game", new GameApplication(), "Classic Pool board with possibility of simulations"),
     STATISTIC("statistic", new StatisticApplication(), "Calculation of performance statistics by varying the angle and norm partitions"),
-    DATA_GEN("data-gen", new DataGenerationApplication(), "Data generation for AI training"),
-    REPRESENTATION("representation", new RepresentationApplication(), "Representation of data stored in files"),
-    AI("ai", new AITrainingApplication(), "Artificial intelligence training");
+    MEASUREMENTS("measurements", new MeasureApplication(), "Measurements of the performance of the language"),
+    REPRESENTATION("representation", new RepresentationApplication(), "Representation of data stored in files");
 
     @Getter
     private final String tag;

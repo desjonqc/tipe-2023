@@ -24,6 +24,10 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 
+/**
+ *  Interface classique d'affichage de billard :
+ *  Permet de jouer une partie de billard
+ */
 public class ClassicGamePanel extends AbstractGamePanel {
 
     private final KeyboardListener keyboardListener;

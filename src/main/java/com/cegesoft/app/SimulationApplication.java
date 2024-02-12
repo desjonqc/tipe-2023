@@ -14,9 +14,9 @@ public class SimulationApplication extends Application {
     public SimulationApplication() {
         this.registerArgument(new PropertyArgument<>(false, "ball-amount", 16, "Amount of balls on the pool", Property.BALL_AMOUNT));
         this.registerArgument(new PropertyArgument<>(false, "alpha", -0.0012f, "Fluid coefficient of friction", Property.ALPHA));
-        this.registerArgument(new PropertyArgument<>(false, "result-limit", 1, "Amount of couple (angle, norm) to store for each position", Property.RESULT_LIMIT));
+        this.registerArgument(new PropertyArgument<>(false, "result-limit", 15, "Amount of couple (angle, norm) to store for each position", Property.RESULT_LIMIT));
         this.registerArgument(new PropertyArgument<>(false, "simulation-time", 6600, "Duration of the simulation (ms)", Property.SIMULATION_TIME));
-        this.registerArgument(new ApplicationArgument<>(false, "partition", "500,119", "Partition size '[angle],[norm]'"));
+        this.registerArgument(new ApplicationArgument<>(false, "partition", "1000,55", "Partition size '[angle],[norm]'"));
     }
 
     @Override

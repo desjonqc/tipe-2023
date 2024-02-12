@@ -2,6 +2,10 @@ package com.cegesoft.util.weighting;
 
 import lombok.AllArgsConstructor;
 
+/**
+ * Cas particulier de ScoreWeighting dans lequel les poids sont tous constants.
+ * @see ScoreWeighting
+ */
 @AllArgsConstructor
 public class ConstantScoreWeighting implements ScoreWeighting {
 

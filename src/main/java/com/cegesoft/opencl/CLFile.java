@@ -8,9 +8,9 @@ import lombok.Getter;
 import java.io.IOException;
 import java.net.URL;
 
+@Getter
 public class CLFile {
 
-    @Getter
     private final CLProgram program;
     public CLFile(URL file, CLContext context) throws IOException {
         this.program = context.createProgram(IOUtils.readText(file));

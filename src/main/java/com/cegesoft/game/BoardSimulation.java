@@ -125,7 +125,7 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
         if (this.initialPosition == null)
             throw new IllegalStateException("Initial position has never been set");
         if (weighting.getWeighting(-1)[0] + weighting.getWeighting(0)[0] + weighting.getWeighting(1)[0] != this.information.getResultsLimit())
-            throw new IllegalArgumentException("Bad ScoreWeighting");
+            throw new IllegalArgumentException("Bad ScoreWeighting : " + (weighting.getWeighting(-1)[0] + weighting.getWeighting(0)[0] + weighting.getWeighting(1)[0]) + " should be " + this.information.getResultsLimit());
         Predicate<Float>[] filterPredicates = new Predicate[] {
                 f -> (float)f > 0,
                 f -> (float)f == 0,

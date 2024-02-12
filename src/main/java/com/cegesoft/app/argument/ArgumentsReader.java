@@ -50,8 +50,9 @@ public abstract class ArgumentsReader {
 
     /**
      * Read an argument
+     *
      * @param argument the argument to read
-     * @param value the value typed into the console
+     * @param value    the value typed into the console
      * @return true if an error occurred
      */
     protected abstract boolean readArgument(ApplicationArgument<?> argument, Object value);
@@ -66,10 +67,12 @@ public abstract class ArgumentsReader {
                 value = Integer.parseInt(strValue);
             } else if (tClass.isAssignableFrom(Float.class)) {
                 value = Float.parseFloat(strValue);
+            } else if (tClass.isAssignableFrom(Boolean.class)) {
+                value = Boolean.parseBoolean(strValue);
             } else if (tClass.isAssignableFrom(Enum.class)) {
                 value = tClass.getDeclaredMethod("valueOf", String.class).invoke(null, strValue.toUpperCase());
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new IllegalApplicationArgumentException("Wrong argument value for " + argument.getPrefix() + ". '" + strValue + "' should be " + tClass.getName(), e);
         }
 

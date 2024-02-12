@@ -19,6 +19,10 @@ import java.awt.event.KeyListener;
 import java.awt.geom.Line2D;
 import java.io.IOException;
 
+/**
+ * Interface d'affichage des positions enregistées. Aucune intéraction possible,
+ * si ce n'est changer vers la position suivante / précédente
+ */
 public class DataReaderPanel extends AbstractGamePanel {
 
     private final StorageReader<? extends IPositionContainer> positionsReader;
@@ -101,6 +105,7 @@ public class DataReaderPanel extends AbstractGamePanel {
         int[] ypoints = {(int) y2, (int) ym, (int) yn};
 
         Line2D line = new Line2D.Float(x1, y1, x2, y2);
+        ((Graphics2D)g).setStroke(new BasicStroke(2));
         ((Graphics2D)g).draw(line);
 
         g.fillPolygon(xpoints, ypoints, 3);
@@ -115,7 +120,7 @@ public class DataReaderPanel extends AbstractGamePanel {
             float y1 = (info[1] * scale + middleY);
 
             PositionResult result = ((FullPosition) this.currentPosition).getResults()[0];
-            g.setColor(result.getResult() < 0 ? Color.RED : (result.getResult() == 0 ? Color.YELLOW : Color.GREEN));
+            g.setColor(result.getResult() < 0 ? Color.RED : (result.getResult() == 0 ? Color.YELLOW : Color.BLACK));
 
             double angle = result.getAngle() * 360.0f / Main.<SimulationInformation>getTProperty(Property.SIMULATION_INFORMATION).getAnglePartition();
             double norm = result.getNorm() * 300.0f / Main.<SimulationInformation>getTProperty(Property.SIMULATION_INFORMATION).getNormPartition();

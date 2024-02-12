@@ -11,6 +11,9 @@ import java.awt.geom.Arc2D;
 import java.io.IOException;
 import java.text.AttributedString;
 
+/**
+ * Affichage abstrait d'un billard, gestion des boules et des mises à jour
+ */
 public abstract class AbstractGamePanel extends JPanel {
     public static final Color GREEN = new Color(64, 152, 68);
 
@@ -33,7 +36,7 @@ public abstract class AbstractGamePanel extends JPanel {
         this.middleY = this.frame.middleY;
 
 
-        registerHorizontalBorders(1, 1, holeDiameter, 0);
+        registerHorizontalBorders( 1, 1, holeDiameter, 0);
         registerHorizontalBorders(1, -1, holeDiameter, 1);
         registerHorizontalBorders(-1, 1, holeDiameter, 2);
         registerHorizontalBorders(-1, -1, holeDiameter, 3);
@@ -52,14 +55,31 @@ public abstract class AbstractGamePanel extends JPanel {
         }
     }
 
+    /**
+     * @param i l'indice de la boule
+     * @return un tableau contenant les 5 floats définissant la boule i
+     */
     public abstract float[] getBallInformation(int i);
 
+    /**
+     * @return le titre de la fenêtre
+     */
     public abstract String getTitle();
 
+    /**
+     * Enregistre les différents évènements (clics, touches...)
+     */
     public abstract void registerListeners();
 
+    /**
+     * Supprime les évènements précédemment enregistrés
+     */
     public abstract void unregisterListeners();
 
+    /**
+     * Fonction héritée de JPanel
+     * @param g the <code>Graphics</code> context in which to paint
+     */
     @Override
     public void paint(Graphics g) {
         super.paint(g);
@@ -134,6 +154,10 @@ public abstract class AbstractGamePanel extends JPanel {
         }
     }
 
+    /**
+     * Affiche les bordures
+     * @param g le graphics
+     */
     private void drawBorders(Graphics2D g) {
         for (int i = 0; i < 6; i++) {
             Polygon polygon = borders[i];
@@ -144,6 +168,13 @@ public abstract class AbstractGamePanel extends JPanel {
         }
     }
 
+    /**
+     * Enregistre les formes polygonales des bordures horizontales
+     * @param xSignum 1 pour coté gauche, -1 pour coté droit
+     * @param ySignum 1 pour en haut, -1 pour en bas
+     * @param holeDiameter diamètre du trou
+     * @param i indice du polygone
+     */
     private void registerHorizontalBorders(int xSignum, int ySignum, float holeDiameter, int i) {
         Polygon polygon = new Polygon();
         polygon.addPoint(middleX + xSignum * Math.round(scale), (int) ((ySignum * (board.getHeight() + holeDiameter)) * scale / 2) + middleY);
@@ -153,6 +184,12 @@ public abstract class AbstractGamePanel extends JPanel {
         borders[i] = polygon;
     }
 
+    /**
+     * Enregistre les formes polygonales des bordures verticales
+     * @param xSignum 1 pour coté gauche, -1 pour coté droit
+     * @param holeDiameter diamètre du trou
+     * @param i indice du polygone
+     */
     private void registerVerticalBorders(int xSignum, float holeDiameter, int i) {
         Polygon polygon = new Polygon();
         polygon.addPoint((int) ((xSignum * board.getWidth()) * scale / 2) + middleX, (int) (((board.getHeight() - holeDiameter)) * scale / 2) + middleY);

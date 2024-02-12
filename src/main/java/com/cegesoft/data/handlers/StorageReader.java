@@ -40,7 +40,7 @@ public class StorageReader<T extends ByteStorable> {
                 throw new IndexOutOfBoundsException("No more storages to read");
             storageIndex--;
             currentStorage = storageHandler.get(storageIndex);
-            currentStorageIndex = storageHandler.getMaxStorableInAFile();
+            currentStorageIndex = currentStorage.getGroupsAmount();
         }
         currentStorageIndex--;
         return currentStorage.getDataGroup(tClass, currentStorageIndex);

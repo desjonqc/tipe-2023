@@ -23,7 +23,7 @@ public class GameApplication extends SimulationApplication {
     public void start() throws Exception {
         super.start();
 
-        ScoreWeighting storageWeighting = new ConstantScoreWeighting(new int[]{8}, new int[]{3}, new int[]{4}, true);
+        ScoreWeighting storageWeighting = new ConstantScoreWeighting(new int[]{8}, new int[]{3}, new int[]{4}, false);
         StorageManager.register(StorageManager.StorageTag.AI_DATA, new FullStorageHandler("python/datastored/" + StorageManager.StorageTag.AI_DATA.getName() + "/", "data",
                 4, SimulationFileMetadata.class, storageWeighting));
 

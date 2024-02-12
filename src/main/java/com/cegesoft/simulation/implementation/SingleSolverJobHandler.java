@@ -10,6 +10,9 @@ import com.cegesoft.log.Logger;
 import com.cegesoft.simulation.Job;
 import com.cegesoft.simulation.MultipleJobHandler;
 
+import java.util.Collections;
+import java.util.List;
+
 public class SingleSolverJobHandler extends MultipleJobHandler {
 
     private long start;
@@ -30,7 +33,12 @@ public class SingleSolverJobHandler extends MultipleJobHandler {
     public void handleResults() {
         Job job = this.jobs[0];
         BoardSimulation simulation = (BoardSimulation) job.getExecutable();
-        int bestShot = simulation.getResults(1).get(0);
+        List<Integer> results = simulation.getResults(1);
+        if (results.isEmpty()) {
+            results = simulation.getResults(0);
+            Collections.shuffle(results);
+        }
+        int bestShot = results.get(0);
         float bestAngle = simulation.getAngle(bestShot);
         float bestScore = simulation.getScore(bestShot);
         float bestNorm = simulation.getNorm(bestShot);

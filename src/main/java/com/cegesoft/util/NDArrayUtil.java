@@ -7,6 +7,13 @@ import java.util.List;
 
 public class NDArrayUtil {
 
+    /**
+     * Retourne l'indice du tableau à partir des indices locaux et de la forme du tableau
+     * @param shape la forme du tableau
+     * @param indices les indices du tableau
+     * @return l'indice du tableau
+     * @throws IndiceDimensionException si les indices ne correspondent pas à la forme du tableau
+     */
     public static int getIndex(int[] shape, int... indices) throws IndiceDimensionException {
         int index = 0;
         if (indices.length != shape.length)
@@ -19,6 +26,12 @@ public class NDArrayUtil {
         return index;
     }
 
+    /**
+     * Retourne les indices locaux du tableau à partir de l'indices global et de la forme du tableau
+     * @param shape la forme du tableau
+     * @param index l'indice global du tableau
+     * @return les indices locaux du tableau
+     */
     public static int[] getIndices(int[] shape, int index) {
         int[] indices = new int[shape.length];
         int offset = 1;
@@ -29,10 +42,16 @@ public class NDArrayUtil {
         return indices;
     }
 
+    /**
+     * Simplifie l'utilisation des indices pour le billard
+     */
     public interface ParametrizedIndex {
         int getIndex(int localIndex, int ballIndex) throws IndiceDimensionException;
     }
 
+    /**
+     * Cas appliqué de ParametrizedIndex à la simulation de positions
+     */
     public static class SimulationParametrizedIndex implements ParametrizedIndex {
 
         private final int angle, norm;

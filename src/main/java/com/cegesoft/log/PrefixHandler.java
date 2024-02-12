@@ -7,6 +7,7 @@ public class PrefixHandler {
     private static final HashMap<String, String> prefixes = new HashMap<>();
 
     static {
+        registerPrefix("measure", ConsoleColors.PURPLE_BOLD + "[MEASURE] " + ConsoleColors.RESET);
         registerPrefix("game", ConsoleColors.GREEN_BOLD + "[GAME] " + ConsoleColors.RESET);
         registerPrefix("help", ConsoleColors.CYAN + "[HELP] " + ConsoleColors.RESET);
         registerPrefix("data", ConsoleColors.PURPLE + "[DATA] " + ConsoleColors.RESET);

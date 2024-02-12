@@ -10,6 +10,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.function.Function;
 
+/**
+ * Fenêtre abstraite configurable avec un AbstractGamePanel
+ * @see AbstractGamePanel
+ */
 public class GameFrame extends JFrame {
 
     @Getter
@@ -52,6 +56,10 @@ public class GameFrame extends JFrame {
         this(board, frame -> new ClassicGamePanel(frame, board));
     }
 
+    /**
+     * Change l'interface de la fenêtre
+     * @param panel, la nouvelle interface à afficher
+     */
     public void setCurrentPanel(AbstractGamePanel panel) {
         ((AbstractGamePanel) this.getContentPane()).unregisterListeners();
         this.setContentPane(panel);
@@ -59,6 +67,9 @@ public class GameFrame extends JFrame {
         this.validate();
     }
 
+    /**
+     * Réinitialise la fenêtre à sa première interface
+     */
     public void resetPanel() {
         ((AbstractGamePanel) this.getContentPane()).unregisterListeners();
         this.setContentPane(this.classicGamePanel);

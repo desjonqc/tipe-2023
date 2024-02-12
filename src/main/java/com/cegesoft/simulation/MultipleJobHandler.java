@@ -3,6 +3,9 @@ package com.cegesoft.simulation;
 import com.cegesoft.log.Logger;
 import com.cegesoft.log.ProgressBar;
 
+/**
+ * Classe abstraite permettant de gérer plusieurs jobs.
+ */
 public abstract class MultipleJobHandler extends Thread {
     protected Job[] jobs;
     protected long start;

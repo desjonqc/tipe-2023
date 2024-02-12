@@ -12,5 +12,8 @@ public enum Property {
     BOARD_CONFIGURATION,
     SIMULATION_INFORMATION,
 
+    /*
+     *
+     */
 
 }

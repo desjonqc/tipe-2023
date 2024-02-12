@@ -3,16 +3,17 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 
-from statistics.statistic_file_manager import read_statistic_files, StatisticFile
+from statistic_file_manager import read_statistic_files, StatisticFile
 
 def plot_3D_graphs(file: StatisticFile):
     plt.figure()
     ax = plt.axes(projection='3d')
-    x, y = np.meshgrid(np.array([i for i in range(file.get_shape()[1])]), np.array([j for j in range(file.get_shape()[0])]))
+    coefficients = file.get_coefficients()
+    x, y = np.meshgrid(np.array([coefficients[0] + i * coefficients[1] for i in range(file.get_shape()[1])]), np.array([coefficients[2] + j * coefficients[3] for j in range(file.get_shape()[0])]))
     ax.plot_surface(x, y, file.get_data(), cmap='viridis', edgecolor='none')
     ax.set_title(file.get_name())
     ax.set_xlabel('Angle')
-    ax.set_ylabel('Norm')
+    ax.set_ylabel('Norme')
     ax.set_zlabel(file.get_name())
 
 def plot_2D_graph(file: StatisticFile):
@@ -37,9 +38,9 @@ def plot_directory(directory: str):
     plt.show()
 
 def plot_simulation(id: int):
-    plot_directory(r"datastored\simulation-" + str(id))
+    plot_directory(r"..\datastored\simulation-" + str(id))
 
 
-plot_simulation(3)
+plot_simulation(1)
 
 # Angle et norme optimales : 3, 2 => 500,119 ; 500 * 119 = 59500
