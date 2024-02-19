@@ -48,12 +48,12 @@ public class BoardSimulation extends BoardStructure implements IJobExecutable {
 
     @Override
     protected CLFunction createFunction() {
-        return new CLFunction(this.file, "move_2", this.ballsField, this.editBallsField, this.ballBufferSizeField, this.ballsAmountField, this.alphaField, this.heightField, this.widthField, this.timeStepField, this.gameInformationField, this.debugField, anglesField, normField, new CLField<>(this.handler, Short.class, (short) 1));
+        return new CLFunction(this.file, "moveBestShotRungeKutta", this.ballsField, this.editBallsField, this.ballBufferSizeField, this.ballsAmountField, this.alphaField, this.heightField, this.widthField, this.timeStepField, this.gameInformationField, this.debugField, anglesField, normField, new CLField<>(this.handler, Short.class, (short) 1));
     }
 
     @Override
     protected void initialise_(BoardPosition boardPosition) {
-        CLFunction function1 = new CLFunction(this.file, "copy_buffer", boardPosition.toBufferField(this.handler, this.queue), this.ballsField, this.ballBufferSizeField, this.ballsAmountField, this.anglesField, this.debugField);
+        CLFunction function1 = new CLFunction(this.file, "copy_buffer", boardPosition.toBufferField(this.handler, this.queue, this.configuration), this.ballsField, this.ballBufferSizeField, this.ballsAmountField, this.anglesField, this.debugField);
         function1.call(this.queue, new int[] {this.ballsAmountField.getArgument(), this.information.getAnglePartition(), this.information.getNormPartition()}).waitFor();
     }
     public float[] getBallInformation(int angle, int norm, int i) throws IndiceDimensionException {

@@ -8,6 +8,9 @@ import com.cegesoft.log.Logger;
 import com.cegesoft.opencl.CLFunction;
 import com.cegesoft.opencl.CLHandler;
 import com.cegesoft.ui.GameFrame;
+import com.cegesoft.util.ExecutionTimer;
+import lombok.Getter;
+import lombok.Setter;
 import org.bridj.Pointer;
 
 public class Board extends BoardStructure {
@@ -47,6 +50,12 @@ public class Board extends BoardStructure {
 
     public static boolean bestShot = false;
     private boolean firstEmptyTick = true;
+    @Getter
+    @Setter
+    private String name = "Board";
+    @Getter
+    @Setter
+    private ExecutionTimer executionTimer = new ExecutionTimer();
 
     public Board(CLHandler handler, float height, float width, int ballsAmount, float alpha) {
         super(handler, height, width, ballsAmount, alpha, (long) ballsAmount * BoardStructure.BALL_BUFFER_SIZE, BoardStructure.GAME_DATA_SIZE);
@@ -59,13 +68,13 @@ public class Board extends BoardStructure {
 
     @Override
     protected CLFunction createFunction() {
-        return new CLFunction(this.file, "move", this.ballsField, this.editBallsField, this.ballBufferSizeField, this.ballsAmountField,
+        return new CLFunction(this.file, "moveRungeKutta", this.ballsField, this.editBallsField, this.ballBufferSizeField, this.ballsAmountField,
                 this.alphaField, this.heightField, this.widthField, this.timeStepField, this.gameInformationField, this.debugField);
     }
 
     @Override
     protected void initialise_(BoardPosition position) {
-        this.ballsField = position.toBufferField(this.handler, this.queue);
+        this.ballsField = position.toBufferField(this.handler, this.queue, this.configuration);
     }
 
     public float[] getBallInformation(int i) {
@@ -91,6 +100,7 @@ public class Board extends BoardStructure {
             return;
         }
         if (!everyBallStopped()) {
+            this.executionTimer.record();
             this.gameInformationField.setValue(this.queue, 0L, 0f).waitFor();
             this.function.call(this.queue, new int[]{this.getBallsAmount()}).waitFor();
             invertEdit();
@@ -99,14 +109,19 @@ public class Board extends BoardStructure {
             this.updateGameInformation();
             GameFrame.getFrameInstance().repaint();
             firstEmptyTick = true;
+            this.executionTimer.stopRecord();
         } else if (firstEmptyTick) {
             firstEmptyTick = false;
+            this.gameInformationField.setValue(this.queue, 0L, 0f).waitFor();
             this.gameInformationField.setValue(this.queue, 1L, 0f).waitFor();
             float[] info = getBallInformation(0);
             if (info[1] < -this.getHeight() / 2 - 1) {
                 ballsField.setValue(queue, 1, 0.0f);
                 ballsField.setValue(queue, 0, INITIAL_POSITION.getPosition()[0]);
                 ballsField.setValue(queue, 4, 0.0f);
+                editBallsField.setValue(queue, 1, 0.0f);
+                editBallsField.setValue(queue, 0, INITIAL_POSITION.getPosition()[0]);
+                editBallsField.setValue(queue, 4, 0.0f);
             }
             if (currentGameInformation[1] > 0) {
                 Logger.info("Player 1 won");
@@ -115,6 +130,8 @@ public class Board extends BoardStructure {
             } else {
                 Logger.info("Draw");
             }
+            Logger.info("Execution time for " + this.name + " : " + (this.executionTimer.getTotalTime() / 1000000.0f) + "ms");
+            this.executionTimer.reset();
         }
     }
 

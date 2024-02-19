@@ -1,5 +1,6 @@
 package com.cegesoft.app;
 
+import com.cegesoft.comparator.ComparatorApplication;
 import com.cegesoft.game.GameApplication;
 import com.cegesoft.help.HelpApplication;
 import com.cegesoft.measure.MeasureApplication;
@@ -13,7 +14,9 @@ public enum ApplicationsImpl {
     GAME("game", new GameApplication(), "Classic Pool board with possibility of simulations"),
     STATISTIC("statistic", new StatisticApplication(), "Calculation of performance statistics by varying the angle and norm partitions"),
     MEASUREMENTS("measurements", new MeasureApplication(), "Measurements of the performance of the language"),
-    REPRESENTATION("representation", new RepresentationApplication(), "Representation of data stored in files");
+    REPRESENTATION("representation", new RepresentationApplication(), "Representation of data stored in files"),
+    COMPARISON("comparison", new ComparatorApplication(), "Comparison of the performance of the language")
+    ;
 
     @Getter
     private final String tag;

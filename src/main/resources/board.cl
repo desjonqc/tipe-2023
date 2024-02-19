@@ -141,7 +141,28 @@ float2 updateVelocity(float2 velocity, float alpha) {
     if (length(velocity) < 0.1f) {
         return (float2) (0, 0);
     }
-    return velocity + velocity * alpha;
+    return velocity - velocity * alpha / 500.0f;
+}
+
+float4 rungeKuttaFloat4Converter(float2 position, float2 velocity) {
+    if (length(velocity) < 0.1f) {
+        velocity = (float2) (0, 0);
+    }
+    return (float4) (position.x, position.y, velocity.x, velocity.y);
+}
+
+float4 rungeKuttaFunc(float4 y, float alpha) {
+    return (float4) (y.z, y.w, -alpha * y.z, -alpha * y.w);
+}
+
+float4 rungeKutta(float2 position, float2 velocity, float alpha, float time) {
+    float4 y = rungeKuttaFloat4Converter(position, velocity);
+    float4 k1 = rungeKuttaFunc(y, alpha);
+    float4 k2 = rungeKuttaFunc(y + (time / 2.0f) * k1, alpha);
+    float4 k3 = rungeKuttaFunc(y + (time / 2.0f) * k2, alpha);
+    float4 k4 = rungeKuttaFunc(y + time * k3, alpha);
+
+    return y + (time / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 }
 
 void setBallPosition(struct DataContainer data, int ballId, float2 positionOffset) {
@@ -209,7 +230,7 @@ float2 updateWallCollision(float2 position, float2 velocity, struct BoardDimensi
     return velocity;
 }
 
-void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, float time, struct DataContainer gameInformation, __global float* debug) {
+void compute_runge_kutta(struct DataContainer balls, struct BoardDimensions dim, float alpha, float time, struct DataContainer gameInformation, __global float* debug) {
     if (readData(balls, 4) == -1) {
         writeAbsoluteData(balls, 4, -1);
         writeAbsoluteData(balls, 0, readData(balls, 0));
@@ -242,8 +263,57 @@ void move_(struct DataContainer balls, struct BoardDimensions dim, float alpha, 
         }
     }
 
-    positionOffset = updatePosition(positionOffset, velocityOffset, time);
-    velocityOffset = updateVelocity(velocityOffset, alpha);
+    float4 position_result = rungeKutta(positionOffset, velocityOffset, alpha, time);
+
+    positionOffset = (float2) (position_result.x, position_result.y);
+    velocityOffset = (float2) (position_result.z, position_result.w);
+
+    if (checkHole(balls, dim, position, gameInformation, debug)) {
+        return;
+    }
+
+    velocityOffset = updateWallCollision(positionOffset, velocityOffset, dim);
+
+    setPosition(balls, positionOffset);
+    setVelocity(balls, velocityOffset);
+    writeData(gameInformation, 0, length(velocityOffset));
+}
+
+void compute_euler_explicit(struct DataContainer balls, struct BoardDimensions dim, float alpha, float time, struct DataContainer gameInformation, __global float* debug) {
+    if (readData(balls, 4) == -1) {
+        writeAbsoluteData(balls, 4, -1);
+        writeAbsoluteData(balls, 0, readData(balls, 0));
+        writeAbsoluteData(balls, 1, readData(balls, 1));
+        writeAbsoluteData(balls, 2, readData(balls, 2));
+        writeAbsoluteData(balls, 3, readData(balls, 3));
+        return;
+    }
+    const float2 position = readPosition(balls);
+    const float2 velocity = readVelocity(balls);
+
+    float2 positionOffset = position;
+    float2 velocityOffset = velocity;
+    for (int j = 0; j < balls.shape.y; j++) {
+        if (j == get_global_id(0)) {
+            continue;
+        }
+        const float2 bPosition = readBallPosition(balls, j);
+        const float2 bVelocity = readBallVelocity(balls, j);
+        if (length(positionOffset - bPosition) <= 2) {
+            float2 d = (float2) positionOffset - bPosition;
+            positionOffset += d * (2 / length(d) - 1);
+
+            float2 delta = (positionOffset - bPosition) / 2;
+
+            float dot1to2 = dot(velocityOffset, delta);
+            float dot2to1 = dot(bVelocity, delta);
+
+            velocityOffset += delta * (dot2to1 - dot1to2);
+        }
+    }
+
+    positionOffset = (float2) updatePosition(positionOffset, velocityOffset, time);
+    velocityOffset = (float2) updateVelocity(velocityOffset, alpha);
 
     if (checkHole(balls, dim, position, gameInformation, debug)) {
         return;
@@ -262,7 +332,7 @@ void debugIndices(int offset, int4 indices, __global float* debug) {
     }
 }
 
-__kernel void move_2(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
+__kernel void moveBestShotRungeKutta(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug, int anglePartition, int normPartition, short first) {
     const int4 ballShape = (int4) (ballBufferSize, ballAmount, anglePartition, normPartition);
     const int4 gameInfoShape = (int4) (2, anglePartition, normPartition, 0);
 
@@ -286,10 +356,10 @@ __kernel void move_2(__global float* balls, __global float* editBalls, int ballB
     if (get_global_id(0) == 0) {
         writeAbsoluteData(gameInfoData, 0, 0);
     }
-    move_(ballsData, dim, alpha, time, gameInfoData, debug);
+    compute_runge_kutta(ballsData, dim, alpha, time, gameInfoData, debug);
 }
 
-__kernel void move(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
+__kernel void moveRungeKutta(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
     const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
     const int4 gameInfoShape = (int4) (2, 0, 0, 0);
 
@@ -297,7 +367,18 @@ __kernel void move(__global float* balls, __global float* editBalls, int ballBuf
     struct DataContainer gameInfoData = {gameInformation, gameInformation, debug, gameInfoShape, TYPE_SINGLE_SIM_INFO};
     struct BoardDimensions dim = {height, width};
 
-    move_(ballsData, dim, alpha, time, gameInfoData, debug);
+    compute_runge_kutta(ballsData, dim, alpha, time, gameInfoData, debug);
+}
+
+__kernel void moveEulerExplicit(__global float* balls, __global float* editBalls, int ballBufferSize, int ballAmount, float alpha, float height, float width, float time, __global float* gameInformation, __global float* debug) {
+    const int4 ballShape = (int4) (ballBufferSize, ballAmount, 0, 0);
+    const int4 gameInfoShape = (int4) (2, 0, 0, 0);
+
+    struct DataContainer ballsData = {balls, editBalls, debug, ballShape, TYPE_SINGLE_SIM_BALLS};
+    struct DataContainer gameInfoData = {gameInformation, gameInformation, debug, gameInfoShape, TYPE_SINGLE_SIM_INFO};
+    struct BoardDimensions dim = {height, width};
+
+    compute_euler_explicit(ballsData, dim, alpha, time, gameInfoData, debug);
 }
 
 __kernel void copy_buffer(__global float* ballsShort, __global float* balls, int ballBufferSize, int ballAmount, int anglePartition, __global float* debug) {

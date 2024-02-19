@@ -18,6 +18,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Line2D;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Interface d'affichage des positions enregistées. Aucune intéraction possible,
@@ -28,6 +30,7 @@ public class DataReaderPanel extends AbstractGamePanel {
     private final StorageReader<? extends IPositionContainer> positionsReader;
     private final KeyboardListener listener;
     private IPositionContainer currentPosition = null;
+    private final List<IBallSet> sets;
 
     public DataReaderPanel(GameFrame frame, Board board, StorageReader<? extends IPositionContainer> positionsReader) {
         super(frame, board);
@@ -38,6 +41,7 @@ public class DataReaderPanel extends AbstractGamePanel {
             throw new RuntimeException(e);
         }
         this.listener = new KeyboardListener();
+        this.sets = Collections.singletonList(new DefaultBallSet());
     }
 
     public void nextPosition() throws IOException, ParseFromFileException {
@@ -55,8 +59,8 @@ public class DataReaderPanel extends AbstractGamePanel {
     }
 
     @Override
-    public float[] getBallInformation(int i) {
-        return board.getBallInformation(i);
+    public List<? extends IBallSet> getBallSets() {
+        return this.sets;
     }
 
     @Override
@@ -115,7 +119,7 @@ public class DataReaderPanel extends AbstractGamePanel {
     public void paint(Graphics g) {
         super.paint(g);
         if (this.currentPosition instanceof FullPosition) {
-            float[] info = this.getBallInformation(0);
+            float[] info = this.sets.get(0).getBallInformation(0);
             float x1 = (info[0] * scale + middleX);
             float y1 = (info[1] * scale + middleY);
 

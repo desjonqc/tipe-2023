@@ -23,6 +23,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *  Interface classique d'affichage de billard :
@@ -32,16 +35,18 @@ public class ClassicGamePanel extends AbstractGamePanel {
 
     private final KeyboardListener keyboardListener;
     private final ClickListener clickListener;
+    private final List<IBallSet> sets;
 
     public ClassicGamePanel(GameFrame frame, Board board) {
         super(frame, board);
         this.keyboardListener = new KeyboardListener();
         this.clickListener = new ClickListener();
+        this.sets = Collections.singletonList(new DefaultBallSet());
     }
 
     @Override
-    public float[] getBallInformation(int i) {
-        return this.board.getBallInformation(i);
+    public List<? extends IBallSet> getBallSets() {
+        return sets;
     }
 
     @Override

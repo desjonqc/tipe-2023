@@ -49,11 +49,11 @@ public abstract class ArgumentsReader {
     }
 
     /**
-     * Read an argument
+     * Lit un argument de l'application
      *
-     * @param argument the argument to read
-     * @param value    the value typed into the console
-     * @return true if an error occurred
+     * @param argument l'argument à lire
+     * @param value    la valeur de l'argument
+     * @return true s'il y a une erreur
      */
     protected abstract boolean readArgument(ApplicationArgument<?> argument, Object value);
 

@@ -40,6 +40,7 @@ public class CLField<T> {
             pointer.set(index, value);
             return ((CLBuffer<T>) this.argument).write(queue, pointer, false);
         }
+        this.argument = value;
         return null;
     }
 

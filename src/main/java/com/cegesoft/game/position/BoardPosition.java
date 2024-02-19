@@ -6,6 +6,7 @@ import com.cegesoft.data.ByteStorable;
 import com.cegesoft.data.metadata.DefaultFileMetadata;
 import com.cegesoft.data.metadata.FileMetadata;
 import com.cegesoft.game.Board;
+import com.cegesoft.game.BoardConfiguration;
 import com.cegesoft.game.BoardStructure;
 import com.cegesoft.game.exception.BoardParsingException;
 import com.cegesoft.opencl.CLBufferField;
@@ -85,12 +86,15 @@ public class BoardPosition implements IPositionContainer {
         this.metadata = meta;
     }
 
-    public CLBufferField<Float> toBufferField(CLHandler handler, CLQueue queue) {
+    public CLBufferField<Float> toBufferField(CLHandler handler, CLQueue queue, BoardConfiguration configuration) {
         CLBufferField<Float> floats = new CLBufferField<>(handler, CLMem.Usage.InputOutput, Float.class, (long) BoardStructure.BALL_BUFFER_SIZE * (this.position.length / 2));
         Pointer<Float> pointer = floats.getArgument().read(queue);
         for (int i = 0; i < (this.position.length / 2); i++) {
             pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE, this.position[2 * i]);
             pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE + 1, this.position[2 * i + 1]);
+            if (this.position[2 * i + 1] < -configuration.getHeight() / 2.0) {
+                pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE + 4, -1.0f);
+            }
         }
         floats.getArgument().write(queue, pointer, false).waitFor();
         return floats;

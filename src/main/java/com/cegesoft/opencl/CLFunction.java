@@ -1,11 +1,14 @@
 package com.cegesoft.opencl;
 
+import com.cegesoft.equations.EquationSolvingFunction;
+import com.cegesoft.equations.SolvingEvent;
 import com.nativelibs4java.opencl.*;
+import lombok.Getter;
 import org.bridj.Pointer;
 
 import java.util.Arrays;
 
-public class CLFunction {
+public class CLFunction implements EquationSolvingFunction {
 
     private final CLFile file;
     private final CLField<?>[] fields;
@@ -26,8 +29,8 @@ public class CLFunction {
         this.kernel.setArgs(args);
     }
 
-    public CLEvent call(CLQueue queue, int[] range, CLEvent... eventsToWait) {
-        return (this.event = this.kernel.enqueueNDRange(queue, range, eventsToWait));
+    public CLFunctionEvent call(CLQueue queue, int[] range, CLEvent... eventsToWait) {
+        return new CLFunctionEvent(this.kernel.enqueueNDRange(queue, range, eventsToWait));
     }
 
     public <T> Pointer<T> getOutput(int fieldId, CLQueue queue, CLEvent... eventsToWait) {
@@ -41,5 +44,26 @@ public class CLFunction {
     public <T> void setArgument(int i, CLField<T> field) {
         fields[i] = field;
         this.updateArgs();
+    }
+
+    public CLField<?> getArgument(int i) {
+        return fields[i];
+    }
+
+    public int getArgumentCount() {
+        return fields.length;
+    }
+
+    public static class CLFunctionEvent implements SolvingEvent {
+        private final CLEvent event;
+
+        public CLFunctionEvent(CLEvent event) {
+            this.event = event;
+        }
+
+        @Override
+        public void waitFor() {
+            this.event.waitFor();
+        }
     }
 }

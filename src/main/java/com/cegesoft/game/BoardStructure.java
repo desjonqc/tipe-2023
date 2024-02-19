@@ -1,10 +1,12 @@
 package com.cegesoft.game;
 
+import com.cegesoft.equations.EquationSolvingFunction;
 import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.opencl.*;
 import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
 import lombok.Getter;
+import lombok.Setter;
 import org.bridj.Pointer;
 
 public abstract class BoardStructure {
@@ -12,7 +14,7 @@ public abstract class BoardStructure {
     public final static int BALL_BUFFER_SIZE = 5;
     public final static int GAME_DATA_SIZE = 2;
 
-    public final static float TIME_STEP = 0.001f;
+    public static float TIME_STEP = 0.001f;
     @Getter
     protected final CLConstantField<Float> timeStepField;
     @Getter
@@ -35,7 +37,8 @@ public abstract class BoardStructure {
     protected final CLBufferField<Float> debugField;
 
     @Getter
-    protected CLFunction function;
+    @Setter
+    protected EquationSolvingFunction function;
 
     @Getter
     protected final CLBufferField<Float> gameInformationField;
@@ -43,8 +46,11 @@ public abstract class BoardStructure {
     protected float[] currentGameInformation;
     @Getter
     protected BoardPosition initialPosition;
+    @Getter
+    protected BoardConfiguration configuration;
 
     public BoardStructure(CLHandler handler, float height, float width, int ballsAmount, float alpha, long ballFieldSize, long gameFieldSize) {
+        this.configuration = new BoardConfiguration((int) width, (int) height, ballsAmount, alpha, handler);
         this.alphaField = new CLConstantField<>(handler, Float.class, alpha);
         this.heightField = new CLConstantField<>(handler, Float.class, height);
         this.widthField = new CLConstantField<>(handler, Float.class, width);

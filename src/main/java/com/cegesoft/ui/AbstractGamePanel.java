@@ -10,12 +10,24 @@ import java.awt.font.TextAttribute;
 import java.awt.geom.Arc2D;
 import java.io.IOException;
 import java.text.AttributedString;
+import java.util.List;
 
 /**
  * Affichage abstrait d'un billard, gestion des boules et des mises à jour
  */
 public abstract class AbstractGamePanel extends JPanel {
     public static final Color GREEN = new Color(64, 152, 68);
+
+    public static final Color[] BALL_COLORS = new Color[]{
+            new Color(210, 190, 19),
+            new Color(2, 86, 162),
+            new Color(175, 15, 12),
+            new Color(52, 43, 101),
+            new Color(207, 126, 58),
+            new Color(17, 104, 64),
+            new Color(138, 46, 48),
+            new Color(0, 0, 0)
+    };
 
     protected final Board board;
     protected final GameFrame frame;
@@ -55,11 +67,8 @@ public abstract class AbstractGamePanel extends JPanel {
         }
     }
 
-    /**
-     * @param i l'indice de la boule
-     * @return un tableau contenant les 5 floats définissant la boule i
-     */
-    public abstract float[] getBallInformation(int i);
+
+    public abstract List<? extends IBallSet> getBallSets();
 
     /**
      * @return le titre de la fenêtre
@@ -116,41 +125,40 @@ public abstract class AbstractGamePanel extends JPanel {
         }
 
 
-        Color[] ballColors = new Color[]{
-                new Color(210, 190, 19),
-                new Color(2, 86, 162),
-                new Color(175, 15, 12),
-                new Color(52, 43, 101),
-                new Color(207, 126, 58),
-                new Color(17, 104, 64),
-                new Color(138, 46, 48),
-                new Color(0, 0, 0)
-        };
-        for (int i = 0; i < board.getBallsAmount(); i++) {
-            float[] info = this.getBallInformation(i);
-            if (i == 0)
-                g.setColor(Color.WHITE);
-            else
-                g.setColor(info[4] <= 0 ? ballColors[(i - 1) % 8] : Color.BLUE);
 
-            float x = info[0] * scale - scale + middleX;
-            float y = info[1] * scale - scale + middleY;
-            float r = 2.0f * scale;
-            Arc2D.Float positionArc = new Arc2D.Float(x, y, r, r, 0, 360, Arc2D.PIE);
-            ((Graphics2D) g).fill(positionArc);
-            if (i >= 8) {
-                g.setColor(Color.WHITE);
-                int offset = Math.round(scale / 4.0f);
-                Arc2D.Float arc = new Arc2D.Float(x + offset, y + offset, r - 2 * offset, r - 2 * offset, 0, 360, Arc2D.PIE);
-                ((Graphics2D) g).fill(arc);
-                // On dessine un cercle blanc autour du numéro de rayon plus petit d'un facteur 2/3, centré sur le centre de la bille
+        for (IBallSet set : this.getBallSets()) {
+            for (int i = 0; i < board.getBallsAmount(); i++) {
+                float[] info = set.getBallInformation(i);
+                g.setColor(set.getBallColor(i));
+                this.drawBall(info, i, g);
+            }
+        }
+    }
+
+    /**
+     * Affiche une boule
+     * @param info les informations de la boules (5 floats)
+     * @param i l'indice de la boule
+     * @param g le graphics
+     */
+    private void drawBall(float[] info, int i, Graphics g) {
+        float x = info[0] * scale - scale + middleX;
+        float y = info[1] * scale - scale + middleY;
+        float r = 2.0f * scale;
+        Arc2D.Float positionArc = new Arc2D.Float(x, y, r, r, 0, 360, Arc2D.PIE);
+        ((Graphics2D) g).fill(positionArc);
+        if (i >= 8) {
+            g.setColor(Color.WHITE);
+            int offset = Math.round(scale / 4.0f);
+            Arc2D.Float arc = new Arc2D.Float(x + offset, y + offset, r - 2 * offset, r - 2 * offset, 0, 360, Arc2D.PIE);
+            ((Graphics2D) g).fill(arc);
+            // On dessine un cercle blanc autour du numéro de rayon plus petit d'un facteur 2/3, centré sur le centre de la bille
 //                    g.fillOval(x + offset, y + offset, r - 2 * offset, r - 2 * offset);
-            }
-            g.setColor(Color.BLACK);
-            if (i > 0) {
-                int offset = Math.round(scale * (i < 10 ? 2.0f / 3.0f : 1.0f / 3.0f));
-                g.drawString(String.valueOf(i), Math.round(x) + offset, Math.round(y) + Math.round(scale * 3.0f / 2.0f));
-            }
+        }
+        g.setColor(Color.BLACK);
+        if (i > 0) {
+            int offset = Math.round(scale * (i < 10 ? 2.0f / 3.0f : 1.0f / 3.0f));
+            g.drawString(String.valueOf(i), Math.round(x) + offset, Math.round(y) + Math.round(scale * 3.0f / 2.0f));
         }
     }
 
@@ -197,6 +205,33 @@ public abstract class AbstractGamePanel extends JPanel {
         polygon.addPoint((int) ((xSignum * (board.getWidth() + holeDiameter)) * scale / 2) + middleX, (int) ((-board.getHeight()) * scale / 2) + middleY);
         polygon.addPoint((int) ((xSignum * (board.getWidth() + holeDiameter)) * scale / 2) + middleX, (int) ((board.getHeight()) * scale / 2) + middleY);
         borders[i] = polygon;
+    }
+
+    public interface IBallSet {
+        float[] getBallInformation(int i);
+        Color getBallColor(int i);
+        Board getBoard();
+    }
+
+    public class DefaultBallSet implements IBallSet {
+
+        @Override
+        public float[] getBallInformation(int i) {
+            return board.getBallInformation(i);
+        }
+
+        @Override
+        public Color getBallColor(int i) {
+            if (i == 0) {
+                return Color.WHITE;
+            }
+            return BALL_COLORS[(i - 1) % 8];
+        }
+
+        @Override
+        public Board getBoard() {
+            return board;
+        }
     }
 
 }
