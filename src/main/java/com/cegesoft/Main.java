@@ -62,15 +62,11 @@ public class Main {
 
         ApplicationsImpl currentApplication = CONSOLE_RUN ? ApplicationsImpl.HELP : ApplicationsImpl.GAME;
 
-        for (String arg : args) {
-            if (arg.startsWith("app=")) {
-                String applicationId = arg.split("=")[1].toLowerCase();
-                try {
-                    currentApplication = ApplicationsImpl.getByTag(applicationId);
-                } catch (Exception ignored) {
-                    Logger.warn("Application '" + applicationId + "' does not exist. Skipping to default");
-                }
-            }
+        ApplicationsImpl invokedApplication = ApplicationsImpl.getByTag(args[0]);
+        if (invokedApplication == null) {
+            Logger.warn("Application '" + args[0] + "' does not exist. Skipping to default");
+        } else {
+            currentApplication = invokedApplication;
         }
 
         CURRENT_APPLICATION = currentApplication.getApplication();

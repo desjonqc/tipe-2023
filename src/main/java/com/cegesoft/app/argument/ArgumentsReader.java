@@ -37,7 +37,7 @@ public abstract class ArgumentsReader {
         for (ApplicationArgument<?> argument : arguments) {
             boolean found = false;
             for (String arg : args) {
-                if (arg.startsWith("--" + argument.getPrefix() + "=")) {
+                if (arg.startsWith("-" + argument.getPrefix() + "=")) {
                     found = true;
                     String argumentValue = arg.split("=")[1];
                     if (this.readArgumentOrProperty(argument, this.convertArgumentType(argument, argumentValue)))

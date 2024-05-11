@@ -24,15 +24,15 @@ public class HelpApplication extends Application {
         }
         Logger.info("============= HELP =============");
         if (appImpl == null) {
-            Logger.info("Usage : app={ApplicationID} to start an application.");
+            Logger.info("Usage : {ApplicationID} to start an application.");
             Logger.info("Applications available :");
             for (ApplicationsImpl impl : ApplicationsImpl.values()) {
                 Logger.info("\t - " + impl.getTag() + " : " + impl.getDescription());
             }
-            Logger.info("Use (app=help) --apph={ApplicationID} for more informations about an application.");
+            Logger.info("Use : help -apph={ApplicationID} for more informations about an application.");
             Logger.info("Note : (Optional) | [Startup Command] | {Placeholder}.");
         } else {
-            Logger.info("[HELP] Usage : app=" + applicationId + " --{ARGS}");
+            Logger.info("[HELP] Usage : " + applicationId + " -{ARGS}");
             Logger.info("Argument list :");
             for (ApplicationArgument<?> argument : appImpl.getApplication().getArguments()) {
                 Logger.info("\t• " + argument.getPrefix());

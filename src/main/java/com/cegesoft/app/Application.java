@@ -46,5 +46,6 @@ public abstract class Application extends ArgumentsReader implements PropertyHan
     public abstract void start() throws Exception;
     public void stop() {
         Logger.resetProgressBar();
+        Logger.info("Exiting application...");
     }
 }
