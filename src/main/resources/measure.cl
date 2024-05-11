@@ -4,6 +4,7 @@
     #pragma OPENCL EXTENSION cl_amd_fp64 : enable
 #endif
 
+// Fonction simple de calcul de flops
 __kernel void flops(__global float* values, int n) {
     int id = get_global_id(0);
     int id2 = get_global_id(1);
