@@ -5,10 +5,12 @@ import lombok.Getter;
 
 import java.io.IOException;
 
+/**
+ * Classe permettant de gérer la base de JavaCL.
+ */
+@Getter
 public class CLHandler {
-    @Getter
     private final CLContext context;
-    @Getter
     private final CLFile boardFile;
 
     public CLHandler() throws IOException {
@@ -23,7 +25,4 @@ public class CLHandler {
     public CLQueue createQueue() {
         return this.context.createDefaultQueue();
     }
-
-    //4294959104
-    //3221061632
 }

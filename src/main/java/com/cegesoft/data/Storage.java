@@ -9,6 +9,14 @@ import lombok.Getter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+/**
+ * Représente un ensemble de données stockées dans un fichier. <br>
+ * Ces données sont des ByteStorable, nécessairement de même taille. <br>
+ * Elles partagent donc le même FileMetadata.
+ *
+ * @see ByteStorable
+ * @see FileMetadata
+ */
 public class Storage {
 
     @Getter
@@ -34,6 +42,12 @@ public class Storage {
         this(getCommonMetadata(groups), parseBytes(groups));
     }
 
+    /**
+     * Fusionne les données d'un Storage avec celles de plusieurs ByteStorable.
+     * @param base le Storage de base
+     * @param groups les ByteStorable à ajouter
+     * @throws StorageInitialisationException si les données ne sont pas de même taille
+     */
     public Storage(Storage base, ByteStorable... groups) throws StorageInitialisationException {
         if (!base.getMetadata().equals(getCommonMetadata(groups)))
             throw new StorageInitialisationException("Data group size mismatch");
@@ -58,6 +72,11 @@ public class Storage {
         return meta;
     }
 
+    /**
+     * Convertit un ensemble de ByteStorable en tableau de bytes.
+     * @param groups les ByteStorable à convertir
+     * @return un tableau de bytes
+     */
     private static byte[][] parseBytes(ByteStorable... groups) {
         byte[][] result = new byte[groups.length][];
         for (int i = 0; i < groups.length; i++) {
@@ -66,12 +85,25 @@ public class Storage {
         return result;
     }
 
+    /**
+     * Récupère les données d'un ByteStorable à partir de son indice.
+     * @param index l'indice du ByteStorable
+     * @return les données du ByteStorable
+     */
     public byte[] getDataGroup(int index) {
         byte[] result = new byte[this.metadata.getDataGroupSize()];
         System.arraycopy(data, index * this.metadata.getDataGroupSize(), result, 0, this.metadata.getDataGroupSize());
         return result;
     }
 
+    /**
+     * Récupère les données d'un ByteStorable à partir de son indice.
+     * @param tClass la classe du ByteStorable
+     * @param index l'indice du ByteStorable
+     * @param <T> le type du ByteStorable
+     * @return le ByteStorable
+     * @throws ParseFromFileException si une erreur survient lors de la lecture
+     */
     public <T extends ByteStorable> T getDataGroup(Class<T> tClass, int index) throws ParseFromFileException {
         try {
             Constructor<T> constructor = tClass.getDeclaredConstructor();
@@ -87,6 +119,9 @@ public class Storage {
         }
     }
 
+    /**
+     * @return le nombre de ByteStorable.
+     */
     public int getGroupsAmount() {
         return this.data.length / this.metadata.getDataGroupSize();
     }

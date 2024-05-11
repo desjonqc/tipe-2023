@@ -8,6 +8,9 @@ import com.cegesoft.representation.RepresentationApplication;
 import com.cegesoft.statistic.StatisticApplication;
 import lombok.Getter;
 
+/**
+ * Implémentation des applications.
+ */
 public enum ApplicationsImpl {
 
     HELP("help", new HelpApplication(), "Help interface"),

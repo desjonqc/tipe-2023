@@ -82,6 +82,9 @@ public class ProgressBar {
         return this.lastDone != this.getDone() || this.lastTotal != this.getTotal();
     }
 
+    /**
+     * Abstraction permettant de créer une contribution à une barre de progression.
+     */
     public interface PBField {
         int getIndex();
         int getTotal();

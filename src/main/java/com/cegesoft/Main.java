@@ -12,6 +12,9 @@ import java.util.Scanner;
  * L'objet de ce programme est de trouver le meilleur coup à jouer
  *
  * @author Clément DESJONQUERES
+ *
+ * @see Property
+ * @see Application
  */
 public class Main {
 

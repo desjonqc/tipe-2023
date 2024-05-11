@@ -1,5 +1,8 @@
 package com.cegesoft.log;
 
+/**
+ * Classe permettant de gérer les couleurs dans la console.
+ */
 public class ConsoleColors {
     // Reset
     public static final String RESET = "\033[0m";  // Text Reset

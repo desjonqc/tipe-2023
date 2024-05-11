@@ -9,15 +9,30 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * S'occupe de reconstituer les arguments donnés par la commande, et de les faire traiter par l'application lancée.
+ * Implémentée par les applications.
+ * @see com.cegesoft.app.Application
+ */
 public abstract class ArgumentsReader {
 
     @Getter
     protected final List<ApplicationArgument<?>> arguments = new ArrayList<>();
 
+    /**
+     * Enregistre un argument pour l'application
+     * @param argument l'argument à enregistrer.
+     */
     protected void registerArgument(ApplicationArgument<?> argument) {
         this.arguments.add(argument);
     }
 
+    /**
+     * Lit les arguments à partir du découpage de l'entrée par espace.
+     * @param args les arguments
+     * @return vrai s'il y a une erreur de traitement
+     * @throws IllegalArgumentException S'il y a un problème lié à un type (au sens de java) d'un argument.
+     */
     public boolean readArguments(String[] args) throws IllegalArgumentException {
         for (ApplicationArgument<?> argument : arguments) {
             boolean found = false;
@@ -40,6 +55,12 @@ public abstract class ArgumentsReader {
         return false;
     }
 
+    /**
+     * Traite l'argument soit comme une propriété, soit comme un argument normal.
+     * @param argument l'argument à traiter
+     * @param value la valeur assignée
+     * @return true s'il y a une erreur de traitement.
+     */
     private boolean readArgumentOrProperty(ApplicationArgument<?> argument, Object value) {
         if (this instanceof PropertyHandler && argument instanceof PropertyArgument<?>) {
             ((PropertyHandler) this).setProperty(((PropertyArgument<?>) argument).getProperty(), value);
@@ -57,6 +78,13 @@ public abstract class ArgumentsReader {
      */
     protected abstract boolean readArgument(ApplicationArgument<?> argument, Object value);
 
+    /**
+     * Convertit le type de String vers le type de l'argument.
+     * @param argument l'argument associé
+     * @param strValue la valeur en String
+     * @return la chaine convertie
+     * @throws IllegalArgumentException En cas d'erreur de conversion.
+     */
     private Object convertArgumentType(ApplicationArgument<?> argument, String strValue) throws IllegalArgumentException {
         Class<?> tClass = argument.getDefaultValue().getClass();
         Object value = null;

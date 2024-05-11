@@ -22,6 +22,9 @@ import org.bridj.Pointer;
 
 import java.util.Arrays;
 
+/**
+ * Position de billard sans vitesse : Uniquement les deux flottants de position de chaque boule.
+ */
 public class BoardPosition implements IPositionContainer {
 
     @Getter

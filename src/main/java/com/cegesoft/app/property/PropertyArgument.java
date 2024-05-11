@@ -3,6 +3,10 @@ package com.cegesoft.app.property;
 import com.cegesoft.app.argument.ApplicationArgument;
 import lombok.Getter;
 
+/**
+ * Argument d'application définissant directement la valeur de la propriété associée.
+ * @param <T>
+ */
 public class PropertyArgument<T> extends ApplicationArgument<T> {
     @Getter
     private final Property property;

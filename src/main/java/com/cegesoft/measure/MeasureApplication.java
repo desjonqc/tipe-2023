@@ -7,9 +7,18 @@ import com.cegesoft.log.Logger;
 import com.cegesoft.opencl.*;
 import com.nativelibs4java.opencl.CLMem;
 
+/**
+ * Application permettant de mesurer les performances des différentes solutions de calcul.
+ */
 public class MeasureApplication extends Application {
 
+    /**
+     * Utilisation de OpenCL si true, sinon Java.
+     */
     private boolean opencl = false;
+    /**
+     * Nombre d'échantillons à traiter.
+     */
     private int N = 100000000;
 
     public MeasureApplication() {

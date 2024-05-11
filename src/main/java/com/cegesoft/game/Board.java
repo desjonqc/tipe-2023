@@ -13,6 +13,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bridj.Pointer;
 
+/**
+ * Implémentation d'un plateau de jeu pour une interface graphique.
+ * @see com.cegesoft.ui.AbstractGamePanel
+ */
 public class Board extends BoardStructure {
 
     public static final BoardPosition INITIAL_POSITION;
@@ -77,6 +81,11 @@ public class Board extends BoardStructure {
         this.ballsField = position.toBufferField(this.handler, this.queue, this.configuration);
     }
 
+    /**
+     * Obtient l'information de la balle i
+     * @param i l'indice de la balle
+     * @return le quadruplet d'information
+     */
     public float[] getBallInformation(int i) {
         Pointer<Float> pointer = this.ballsField.getArgument().read(queue);
         float[] info = new float[BoardStructure.BALL_BUFFER_SIZE];
@@ -86,6 +95,9 @@ public class Board extends BoardStructure {
         return info;
     }
 
+    /**
+     * @return true si toutes les boules sont à l'arrêt
+     */
     public boolean everyBallStopped() {
         Pointer<Float> pointer = this.ballsField.getArgument().read(queue);
         for (int i = 0; i < Main.getIntProperty(Property.BALL_AMOUNT); i++) {
@@ -95,6 +107,9 @@ public class Board extends BoardStructure {
         return true;
     }
 
+    /**
+     * Un tick de l'interface graphique (appelé tous les Board.TIME_STEP)
+     */
     public void tick() {
         if (bestShot) {
             return;
@@ -135,7 +150,12 @@ public class Board extends BoardStructure {
         }
     }
 
-
+    /**
+     * Change la vitesse de la boule i
+     * @param i l'indice de la boule
+     * @param vx la vitesse selon x.
+     * @param vy la vitesse selon y.
+     */
     public void setBallVelocity(int i, float vx, float vy) {
         Pointer<Float> pointer = this.ballsField.getArgument().read(this.getQueue());
         pointer.set((long) i * BoardStructure.BALL_BUFFER_SIZE + 2, vx);
@@ -144,6 +164,10 @@ public class Board extends BoardStructure {
         this.ballsField.getArgument().write(this.getQueue(), pointer, false).waitFor();
     }
 
+    /**
+     * Change la position complète du billard.
+     * @param position La position.
+     */
     public void setPosition(BoardPosition position) {
         Pointer<Float> pointer = this.ballsField.getArgument().read(this.getQueue());
         for (int i = 0; i < this.getBallsAmount(); i++) {
@@ -155,6 +179,11 @@ public class Board extends BoardStructure {
         GameFrame.getFrameInstance().repaint();
     }
 
+    /**
+     * Sauvegarde la position.
+     * @return une copie de la position.
+     * @throws BoardParsingException en cas d'erreur lors de la sauvegarde.
+     */
     public BoardPosition savePosition() throws BoardParsingException {
         return new BoardPosition(this);
     }

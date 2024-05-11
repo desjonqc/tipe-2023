@@ -6,6 +6,17 @@ import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.util.weighting.ScoreWeighting;
 import lombok.Getter;
 
+/**
+ * Gère le stockage de données avec résultats de simulation.
+ *
+ * <p>
+ *     Le poids des résultats est défini par un objet ScoreWeighting. Il s'agit de la distribution des poids des résultats à stocker.
+ * </p>
+ *
+ * @see StorageHandler
+ * @see ScoreWeighting
+ * @see com.cegesoft.game.position.FullPosition
+ */
 public class FullStorageHandler extends StorageHandler {
     @Getter
     private final ScoreWeighting weighting;

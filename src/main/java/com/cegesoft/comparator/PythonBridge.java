@@ -2,6 +2,9 @@ package com.cegesoft.comparator;
 
 import java.io.IOException;
 
+/**
+ * Appelle le script Python associé aux arguments.
+ */
 public class PythonBridge {
 
 

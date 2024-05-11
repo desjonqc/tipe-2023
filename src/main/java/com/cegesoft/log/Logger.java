@@ -10,6 +10,11 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Classe permettant de gérer les logs de l'application, ainsi que les barres de progression.
+ * Ajoute les messages à traiter dans le AsyncLogger
+ * @see AsyncLogger
+ */
 public class Logger {
 
     @Getter
@@ -105,6 +110,9 @@ public class Logger {
         logger.print_(message, prefix);
     }
 
+    /**
+     * Gère la console en asynchrone
+     */
     private static class AsyncLogger extends Thread {
         private final Queue<String> queue = new ConcurrentLinkedQueue<>();
         @Getter

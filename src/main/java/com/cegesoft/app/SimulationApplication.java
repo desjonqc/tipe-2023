@@ -8,6 +8,9 @@ import com.cegesoft.game.SimulationInformation;
 import com.cegesoft.log.Logger;
 import com.cegesoft.opencl.CLHandler;
 
+/**
+ * Application abstraite permettant d'effectuer des simulations de billard
+ */
 public class SimulationApplication extends Application {
     protected int anglePartition, normPartition;
 

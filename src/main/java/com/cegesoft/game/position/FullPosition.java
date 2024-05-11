@@ -6,6 +6,11 @@ import com.cegesoft.data.metadata.SimulationFileMetadata;
 import com.cegesoft.log.Logger;
 import lombok.Getter;
 
+/**
+ * Contient une position de billard et des résultats de simulation.
+ * @see BoardPosition
+ * @see PositionResult
+ */
 public class FullPosition implements IPositionContainer {
 
     @Getter

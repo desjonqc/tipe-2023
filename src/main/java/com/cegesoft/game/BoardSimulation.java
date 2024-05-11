@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Classe permettant le calcul du meilleur coup à partir d'une position.
+ */
 public class BoardSimulation extends BoardStructure implements IJobExecutable {
     private final int[] BALL_DATA_SHAPE;
     private final int[] GAME_DATA_SHAPE;

@@ -14,12 +14,18 @@ import com.cegesoft.game.position.BoardPosition;
 import com.cegesoft.log.Logger;
 import com.cegesoft.simulation.implementation.MeasurementJobHandler;
 
+/**
+ * Application de simulation de statistiques
+ */
 public class StatisticApplication extends SimulationApplication {
     private int[] coefficients;
     private int simulationId;
     private int positionAmount;
     private String fileName = "statistic-2.pos";
 
+    /**
+     * Initialise l'application et définit les arguments
+     */
     public StatisticApplication() {
         super();
         this.registerArgument(new ApplicationArgument<>(true, "id", 0, "Simulation ID"));
@@ -32,9 +38,11 @@ public class StatisticApplication extends SimulationApplication {
     public void start() throws Exception {
         super.start();
 
+        // Initialisation du stockage des positions
         StorageManager.register(StorageManager.StorageTag.STATISTIC_POSITION, new StorageHandler("python/datastored/" + StorageManager.StorageTag.STATISTIC_POSITION.getName() + "/", "pos",
                 10, DefaultFileMetadata.class));
 
+        // Lecture des positions
         FileStorage<DefaultFileMetadata> fileStorage = new FileStorage<>(fileName, DefaultFileMetadata.class);
         Storage storage = fileStorage.read();
         BoardPosition[] positions = new BoardPosition[positionAmount];
@@ -42,6 +50,7 @@ public class StatisticApplication extends SimulationApplication {
             positions[i] = storage.getDataGroup(BoardPosition.class, i);
         }
 
+        // Démarrage des simulations pour chaque coefficient
         for (int i = 0; i < StatisticManager.NORM_ANGLE_SHAPE[0]; i++) {
             for (int j = 0; j < StatisticManager.NORM_ANGLE_SHAPE[1]; j++) {
                 SimulationInformation information = new SimulationInformation(coefficients[0] + j * coefficients[1], coefficients[2] + i * coefficients[3], 15);
@@ -51,6 +60,8 @@ public class StatisticApplication extends SimulationApplication {
                 Logger.info("Finished " + i + " " + j);
             }
         }
+
+        // Sauvegarde les résultats
         Logger.info("Finished");
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.NICE_PLAY_LOSS).saveFileToNumpy(simulationId, "nice_play_loss", true, coefficients);
         StatisticManager.getOrCreateStatistic(StatisticManager.StatisticTag.BAD_PLAY_LOSS).saveFileToNumpy(simulationId, "bad_play_loss", true, coefficients);
@@ -67,6 +78,15 @@ public class StatisticApplication extends SimulationApplication {
         StorageManager.unregister(StorageManager.StorageTag.STATISTIC_POSITION);
     }
 
+    /**
+     * Lit les arguments.
+     *
+     * L'argument 'coef' correspond aux paramètres de partitionnement.
+     *
+     * @param argument l'argument à lire
+     * @param value    la valeur de l'argument
+     * @return
+     */
     @Override
     protected boolean readArgument(ApplicationArgument<?> argument, Object value) {
         switch (argument.toString()) {

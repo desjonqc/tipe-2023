@@ -1,5 +1,8 @@
 package com.cegesoft.app.property;
 
+/**
+ * Liste des paramètres prépondérants dans le programme.
+ */
 public enum Property {
 
     BALL_AMOUNT,

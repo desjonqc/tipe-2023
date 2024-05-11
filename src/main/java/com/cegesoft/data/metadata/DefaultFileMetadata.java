@@ -6,6 +6,9 @@ import lombok.Getter;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * Implémentation par défaut de FileMetadata.
+ */
 public class DefaultFileMetadata implements FileMetadata {
 
     @Getter

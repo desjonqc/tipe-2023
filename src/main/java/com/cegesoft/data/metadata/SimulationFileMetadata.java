@@ -6,6 +6,11 @@ import lombok.Getter;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * Métadonnées d'un fichier de simulation.
+ * Contient la taille des partitions d'angle et de norme, ainsi que le nombre de résultats à stocker,
+ * en plus de la taille des données.
+ */
 public class SimulationFileMetadata extends DefaultFileMetadata {
 
     @Getter

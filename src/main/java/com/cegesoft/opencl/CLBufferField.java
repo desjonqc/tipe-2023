@@ -6,6 +6,10 @@ import com.nativelibs4java.opencl.CLMem;
 import com.nativelibs4java.opencl.CLQueue;
 import org.bridj.Pointer;
 
+/**
+ * Classe représentant un champ de données OpenCL.
+ * @param <T> Type de données
+ */
 public class CLBufferField<T> extends CLField<T> {
 
     public CLBufferField(CLHandler handler, CLMem.Usage type, Class<T> tClass, long size) {

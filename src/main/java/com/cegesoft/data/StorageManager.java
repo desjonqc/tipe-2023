@@ -8,6 +8,10 @@ import lombok.Getter;
 
 import java.util.HashMap;
 
+/**
+ * Gère l'enregistrement des données suivant leur domaine d'appartenance.
+ * @see StorageHandler
+ */
 public class StorageManager {
 
     private static final HashMap<StorageTag, StorageHandler> handlers = new HashMap<>();
@@ -33,6 +37,9 @@ public class StorageManager {
             handler.close();
     }
 
+    /**
+     * Différents domaines de stockage de données.
+     */
     @AllArgsConstructor
     public enum StorageTag {
         AI_DATA("ai_data"),

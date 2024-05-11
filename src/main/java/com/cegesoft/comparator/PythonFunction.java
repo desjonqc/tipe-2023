@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fausse classe pour simuler une classe de la librairie opencl
+ * Fausse classe pour simuler une classe de la bibliothèque OpenCL
  * @see CLFunction
  */
 public class PythonFunction implements EquationSolvingFunction {

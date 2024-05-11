@@ -16,6 +16,10 @@ import com.cegesoft.util.weighting.ScoreWeighting;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Application classique du jeu du billard :
+ * Permet de jouer au billard et de lancer une recherche de meilleur coup.
+ */
 public class GameApplication extends SimulationApplication {
 
     private Timer timer;

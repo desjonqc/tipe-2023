@@ -16,6 +16,12 @@ import com.cegesoft.util.weighting.ScoreWeighting;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Tâche de calcul récursif de meilleurs coups, suivant la distribution définie dans la variable weighting.
+ * Permet de générer un grand nombre de résultats de simulations, aléatoirement.
+ *
+ * @see ScoreWeighting
+ */
 public class DeepProportionateJobHandler extends MultipleJobHandler {
 
     private final Job lastJob;

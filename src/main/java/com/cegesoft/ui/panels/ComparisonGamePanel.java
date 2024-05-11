@@ -1,33 +1,35 @@
 package com.cegesoft.ui.panels;
 
-import com.cegesoft.Main;
-import com.cegesoft.app.property.Property;
 import com.cegesoft.game.Board;
 import com.cegesoft.log.Logger;
-import com.cegesoft.simulation.implementation.SingleSolverJobHandler;
 import com.cegesoft.ui.AbstractGamePanel;
 import com.cegesoft.ui.GameFrame;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Compare les performances et l'évolution de plusieurs méthodes de résolution.
+ */
 public class ComparisonGamePanel extends AbstractGamePanel {
 
     private final List<Board> boards;
     private final List<ComparisonBallSet> ballSets;
-    private final KeyboardListener keyboardListener;
     private final ClickListener clickListener;
 
+    /**
+     * Crée un affichage de comparaison
+     *
+     * @param frame  la fenêtre de jeu
+     * @param boards les plateaux à comparer
+     */
     public ComparisonGamePanel(GameFrame frame, Board... boards) {
         super(frame, boards[0]);
         this.boards = Arrays.asList(boards);
         this.ballSets = this.boards.stream().map(board -> new ComparisonBallSet(board, BALL_COLORS[this.boards.indexOf(board)])).collect(Collectors.toList());
-        this.keyboardListener = new KeyboardListener();
         this.clickListener = new ClickListener();
     }
 
@@ -43,16 +45,17 @@ public class ComparisonGamePanel extends AbstractGamePanel {
 
     @Override
     public void registerListeners() {
-        frame.addKeyListener(this.keyboardListener);
         this.addMouseListener(this.clickListener);
     }
 
     @Override
     public void unregisterListeners() {
-        frame.removeKeyListener(this.keyboardListener);
         this.removeMouseListener(this.clickListener);
     }
 
+    /**
+     * Implémentation spécifique de IBallSet pour la comparaison (couleur fixe)
+     */
     public static class ComparisonBallSet implements IBallSet {
         private final Board board;
         private final Color color;
@@ -78,31 +81,9 @@ public class ComparisonGamePanel extends AbstractGamePanel {
         }
     }
 
-    private class KeyboardListener implements KeyListener {
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-        }
-
-        @Override
-        public void keyPressed(KeyEvent evt) {
-            try {
-                if (evt.getKeyCode() == KeyEvent.VK_SPACE && !Board.bestShot) {
-                    Logger.info("Calculating best shot...");
-                    Board.bestShot = true;
-                    SingleSolverJobHandler jobHandler = new SingleSolverJobHandler(board.savePosition(), Main.getTProperty(Property.SIMULATION_INFORMATION));
-                    jobHandler.start();
-                }
-            } catch (Exception e) {
-                Logger.error(e);
-            }
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-        }
-    }
-
+    /**
+     * Ecoute les évènements de clics de souris pour lancer la boule blanche, de la même manière pour chaque méthode à comparer.
+     */
     private class ClickListener implements MouseListener {
 
         @Override

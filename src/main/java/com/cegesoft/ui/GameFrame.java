@@ -21,8 +21,14 @@ public class GameFrame extends JFrame {
 
     protected final float scale;
     protected final int middleX, middleY;
-    private AbstractGamePanel classicGamePanel;
+    private final AbstractGamePanel classicGamePanel;
 
+    /**
+     * Crée une fenêtre de jeu avec un affichage de jeu paramétré
+     * @param board le plateau de jeu
+     * @param defaultPanel l'affichage de jeu par défaut. Sa création dépend de l'instance de GameFrame, donc celui-ci est créé par le GameFrame au moment de l'initialisation.
+     * @see AbstractGamePanel
+     */
     public GameFrame(Board board, Function<GameFrame, AbstractGamePanel> defaultPanel) {
         frameInstance = this;
 
@@ -52,6 +58,10 @@ public class GameFrame extends JFrame {
         this.setVisible(true);
     }
 
+    /**
+     * Crée une fenêtre de jeu avec un affichage de jeu par défaut
+     * @param board le plateau de jeu
+     */
     public GameFrame(Board board) {
         this(board, frame -> new ClassicGamePanel(frame, board));
     }

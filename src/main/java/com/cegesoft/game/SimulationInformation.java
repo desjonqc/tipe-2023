@@ -9,6 +9,9 @@ import lombok.Getter;
 
 import java.util.Objects;
 
+/**
+ * Contient toutes les informations d'une simulation, et calcule ceux que l'on peut déduire.
+ */
 @AllArgsConstructor
 public class SimulationInformation {
 

@@ -13,6 +13,9 @@ import com.cegesoft.simulation.MultipleJobHandler;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Tâche de simulation pour un seul coup (Une unique condition initiale)
+ */
 public class SingleSolverJobHandler extends MultipleJobHandler {
 
     private long start;

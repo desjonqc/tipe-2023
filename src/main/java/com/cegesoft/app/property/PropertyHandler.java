@@ -1,5 +1,8 @@
 package com.cegesoft.app.property;
 
+/**
+ * Interface de gestion de propriété.
+ */
 public interface PropertyHandler {
 
     void setProperty(Property property, Object o);

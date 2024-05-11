@@ -11,6 +11,14 @@ import com.cegesoft.ui.panels.ComparisonGamePanel;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Application de comparaison d'algorithmes avec interface graphique.
+ * Chaque couleur représente une méthode de résolution.
+ * Les algorithmes comparés sont :
+ *   - Euler explicite
+ *   - Solve IVP (de python)
+ *   - Runge-Kutta à l'ordre 3
+ */
 public class ComparatorApplication extends SimulationApplication {
     private Timer timer;
 

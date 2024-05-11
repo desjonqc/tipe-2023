@@ -2,6 +2,10 @@ package com.cegesoft.log;
 
 import java.util.HashMap;
 
+/**
+ * Permet d'afficher automatiquement un préfixe dans la console suivant le package de l'appel de l'instruction 'log'
+ * @see Logger
+ */
 public class PrefixHandler {
 
     private static final HashMap<String, String> prefixes = new HashMap<>();

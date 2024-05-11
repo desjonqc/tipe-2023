@@ -68,6 +68,9 @@ public abstract class AbstractGamePanel extends JPanel {
     }
 
 
+    /**
+     * @return les ensembles de boules à afficher
+     */
     public abstract List<? extends IBallSet> getBallSets();
 
     /**
@@ -178,7 +181,7 @@ public abstract class AbstractGamePanel extends JPanel {
 
     /**
      * Enregistre les formes polygonales des bordures horizontales
-     * @param xSignum 1 pour coté gauche, -1 pour coté droit
+     * @param xSignum 1 pour côté gauche, -1 pour côté droit
      * @param ySignum 1 pour en haut, -1 pour en bas
      * @param holeDiameter diamètre du trou
      * @param i indice du polygone
@@ -207,12 +210,31 @@ public abstract class AbstractGamePanel extends JPanel {
         borders[i] = polygon;
     }
 
+    /**
+     * Représente un ensemble de boules positionnées et colorées.
+     */
     public interface IBallSet {
+        /**
+         * @param i l'indice de la boule
+         * @return la représentation informatique de la boule i
+         */
         float[] getBallInformation(int i);
+
+        /**
+         * @param i l'indice de la boule
+         * @return la couleur de la boule i
+         */
         Color getBallColor(int i);
+
+        /**
+         * @return le plateau de jeu
+         */
         Board getBoard();
     }
 
+    /**
+     * Implémentation par défaut de l'interface IBallSet
+     */
     public class DefaultBallSet implements IBallSet {
 
         @Override

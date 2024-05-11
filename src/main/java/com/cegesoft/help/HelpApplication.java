@@ -7,6 +7,9 @@ import com.cegesoft.app.argument.ApplicationArgument;
 import com.cegesoft.log.ConsoleColors;
 import com.cegesoft.log.Logger;
 
+/**
+ * Application d'aide. Application par défaut.
+ */
 public class HelpApplication extends Application {
     private String applicationId = "none";
     public HelpApplication() {

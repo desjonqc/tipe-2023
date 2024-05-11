@@ -11,6 +11,12 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 
+/**
+ * Enregistre des données (sous forme Storage) dans un fichier.
+ * @param <T> le type de métadonnées.
+ *
+ * @see Storage
+ */
 public class FileStorage<T extends FileMetadata> {
 
     @Getter
@@ -50,16 +56,26 @@ public class FileStorage<T extends FileMetadata> {
         this(path, metadata, (Class<T>) metadata.getClass());
     }
 
-    public void write(Storage merge) throws IOException {
-        if (!this.metadata.equals(merge.getMetadata()))
+    /**
+     * Écrit un Storage dans le fichier.
+     * @param storage le Storage à écrire
+     * @throws IOException si les métadonnées ne correspondent pas.
+     */
+    public void write(Storage storage) throws IOException {
+        if (!this.metadata.equals(storage.getMetadata()))
             throw new IOException("Data group size mismatch");
         DataOutputStream out = new DataOutputStream(Files.newOutputStream(file.toPath()));
         out.write(ByteBuffer.allocate(4).putInt(this.metadata.size()).array());
         out.write(this.metadata.toBytes());
-        out.write(merge.getData());
+        out.write(storage.getData());
         out.close();
     }
 
+    /**
+     * Lit un Storage depuis le fichier.
+     * @return le Storage lu
+     * @throws IOException si le fichier est corrompu.
+     */
     public Storage read() throws IOException {
         DataInputStream in = new DataInputStream(Files.newInputStream(file.toPath()));
         byte[] data = new byte[(int) file.length() - this.metadata.size() - 4];
@@ -71,6 +87,15 @@ public class FileStorage<T extends FileMetadata> {
         return new Storage(this.metadata, data);
     }
 
+    /**
+     * Lit les métadonnées du fichier.
+     * @return les métadonnées lues
+     * @throws IOException si le fichier est corrompu.
+     * @throws NoSuchMethodException si le constructeur par défaut n'existe pas.
+     * @throws InvocationTargetException si une erreur survient lors de l'invocation du constructeur.
+     * @throws IllegalAccessException si l'accès au constructeur est interdit.
+     * @throws InstantiationException si une erreur survient lors de l'instanciation.
+     */
     private T readMetadata() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
         DataInputStream in = new DataInputStream(Files.newInputStream(file.toPath()));
         byte[] dataSize = new byte[4];

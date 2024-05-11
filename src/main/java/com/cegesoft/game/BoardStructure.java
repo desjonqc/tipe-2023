@@ -9,6 +9,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bridj.Pointer;
 
+/**
+ * Classe abstraite de billard, adaptée aussi bien au jeu, qu'à la simulation hors interface graphique.
+ * @see Board
+ * @see BoardSimulation
+ */
 public abstract class BoardStructure {
 
     public final static int BALL_BUFFER_SIZE = 5;
@@ -67,21 +72,41 @@ public abstract class BoardStructure {
         this.timeStepField = new CLConstantField<>(this.handler, Float.class, TIME_STEP);
     }
 
+    /**
+     * Génère la fonction OpenCL (avec les différents arguments)
+     * @return la fonction générée
+     */
     protected abstract CLFunction createFunction();
 
+    /**
+     * Met à jour les informations de la partie en cours.
+     */
     protected void updateGameInformation() {
         Pointer<Float> pointer = this.gameInformationField.getArgument().read(queue);
         this.currentGameInformation = pointer.getFloats();
     }
 
+    /**
+     * Inverse le tableau d'écriture et le tableau de lecture :
+     * La fonction OpenCL lit les données dans un tableau de lecture et modifie celui d'écriture.
+     * D'une itération sur l'autre, le tableau de lecture devient celui d'écriture et inversement.
+     */
     protected void invertEdit() {
         CLBufferField<Float> temp = this.ballsField;
         this.ballsField = this.editBallsField;
         this.editBallsField = temp;
     }
 
+    /**
+     * Abstraction permettant d'initialiser l'implémentation avec une position donnée.
+     * @param position la position
+     */
     protected abstract void initialise_(BoardPosition position);
 
+    /**
+     * Configure la classe pour une position donnée.
+     * @param position la position
+     */
     public void initialise(BoardPosition position) {
         this.initialise_(position);
         this.initialPosition = position;

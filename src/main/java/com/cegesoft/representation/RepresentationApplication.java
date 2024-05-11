@@ -13,6 +13,9 @@ import com.cegesoft.game.position.FullPosition;
 import com.cegesoft.ui.GameFrame;
 import com.cegesoft.ui.panels.DataReaderPanel;
 
+/**
+ * Application permettant l'affichage d'une collection de simulations, indicé par l'identifiant id.
+ */
 public class RepresentationApplication extends SimulationApplication {
 
     private int id;

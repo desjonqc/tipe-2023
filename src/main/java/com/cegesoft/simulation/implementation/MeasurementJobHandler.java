@@ -12,6 +12,9 @@ import com.cegesoft.statistic.Statistic;
 import com.cegesoft.statistic.StatisticManager;
 import com.cegesoft.util.exception.IndiceDimensionException;
 
+/**
+ * Tâche de mesure statistique, pour comparer les différentes partitions [normes, angles]
+ */
 public class MeasurementJobHandler extends MultipleJobHandler {
 
     private long start;

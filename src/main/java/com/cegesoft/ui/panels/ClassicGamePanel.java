@@ -35,6 +35,9 @@ public class ClassicGamePanel extends AbstractGamePanel {
 
     private final KeyboardListener keyboardListener;
     private final ClickListener clickListener;
+    /**
+     * Contient un seul jeu de billes
+     */
     private final List<IBallSet> sets;
 
     public ClassicGamePanel(GameFrame frame, Board board) {
@@ -66,6 +69,9 @@ public class ClassicGamePanel extends AbstractGamePanel {
         this.removeMouseListener(this.clickListener);
     }
 
+    /**
+     * Écoute les événements clavier pour effectuer des actions spécifiques
+     */
     private class KeyboardListener implements KeyListener {
 
         @Override
@@ -75,25 +81,20 @@ public class ClassicGamePanel extends AbstractGamePanel {
         @Override
         public void keyPressed(KeyEvent evt) {
             try {
-                if (evt.getKeyCode() == KeyEvent.VK_SPACE && !Board.bestShot) {
+                if (evt.getKeyCode() == KeyEvent.VK_SPACE && !Board.bestShot) { // Lance la recherche du meilleur coup
                     Logger.info("Calculating best shot...");
                     Board.bestShot = true;
                     SingleSolverJobHandler jobHandler = new SingleSolverJobHandler(board.savePosition(), Main.getTProperty(Property.SIMULATION_INFORMATION));
                     jobHandler.start();
                 }
-                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-                    float bestNorm = 300;
-                    float bestAngle = 3;
-                    board.setBallVelocity(0, (float) (Math.cos(Math.toRadians(bestAngle)) * bestNorm), (float) (Math.sin(Math.toRadians(bestAngle)) * bestNorm));
-                }
 
-                if (evt.getKeyCode() == KeyEvent.VK_S) {
+                if (evt.getKeyCode() == KeyEvent.VK_S) { // Sauvegarde la position actuelle
                     StorageHandler handler = StorageManager.get(StorageManager.StorageTag.STATISTIC_POSITION);
                     BoardPosition position = board.savePosition();
                     handler.addStorable(position);
                 }
 
-                if (evt.getKeyCode() == KeyEvent.VK_L) {
+                if (evt.getKeyCode() == KeyEvent.VK_L) { // Charge la première position sauvegardée
                     Logger.info("Loading position...");
                     StorageHandler handler = StorageManager.get(StorageManager.StorageTag.STATISTIC_POSITION);
 
@@ -106,7 +107,7 @@ public class ClassicGamePanel extends AbstractGamePanel {
                     }
                 }
 
-                if (evt.getKeyCode() == KeyEvent.VK_D) {
+                if (evt.getKeyCode() == KeyEvent.VK_D) { // Démarre l'enregistrement de 10 positions aléatoire
                     ScoreWeighting weighting = new ConstantScoreWeighting(new int[]{4}, new int[]{3}, new int[]{3}, true);
                     DeepProportionateJobHandler jobHandler = new DeepProportionateJobHandler(
                             new Job(
@@ -117,7 +118,7 @@ public class ClassicGamePanel extends AbstractGamePanel {
                     jobHandler.start();
                 }
 
-                if (evt.getKeyCode() == KeyEvent.VK_R) {
+                if (evt.getKeyCode() == KeyEvent.VK_R) { // Affichage des données enregistrées par l'opération D
                     StorageHandler handler = StorageManager.get(StorageManager.StorageTag.AI_DATA);
                     frame.setCurrentPanel(new DataReaderPanel(frame, board, handler.getReader(FullPosition.class)));
                 }
@@ -131,6 +132,9 @@ public class ClassicGamePanel extends AbstractGamePanel {
         }
     }
 
+    /**
+     * Écoute les événements souris pour lancer la boule blanche
+     */
     private class ClickListener implements MouseListener {
 
         @Override

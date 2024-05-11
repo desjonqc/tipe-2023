@@ -11,6 +11,9 @@ import lombok.Getter;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Représente un résultat de simulation.
+ */
 public class PositionResult implements ByteStorable {
 
     @Getter
@@ -36,6 +39,10 @@ public class PositionResult implements ByteStorable {
     }
 
 
+    /**
+     * Utilise le bitwise pour enregistrer deux entiers et un short sur 3 octets.
+     * @return
+     */
     @Override
     public byte[] toBytes() {
         byte[] bytes = new byte[this.size()];
