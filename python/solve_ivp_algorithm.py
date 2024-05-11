@@ -2,6 +2,12 @@ import os
 import numpy as np
 from scipy.integrate import solve_ivp
 
+"""
+Adaptation du code OpenCL en Python, avec la résolution faite par solve_ivp. Pour plus d'informations,
+se référer à la documentation du code OpenCL.
+"""
+
+
 TYPE_SINGLE_SIM_BALLS = 0
 TYPE_SINGLE_SIM_INFO = 1
 TYPE_MULTI_SIM_BALLS = 2
@@ -197,6 +203,10 @@ def move(balls, editBalls, ballBufferSize, ballAmount, alpha, height, width, tim
     for i in range(ballAmount):
         move_(i, ballsData, dim, alpha, time, gameInfoData, debug)
 
+
+"""
+Formatage des données à renvoyer (en chaine de caractères)
+"""
 
 balls = np.array([np.float32(i) for i in os.sys.argv[1].split(';')], dtype=np.float32)
 editBalls = np.array([np.float32(i) for i in os.sys.argv[2].split(';')], dtype=np.float32)
