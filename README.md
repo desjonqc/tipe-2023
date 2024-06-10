@@ -24,7 +24,7 @@ Pour lancer le programme et tomber sur l'interface d'aide, exécutez simplement
 L'interface d'aide permet d'afficher les différents arguments de lancement à votre disposition.
 Vous pouvez les inscrire directement dans la commande de lancement sans passer par l'aide :
 
-> java -jar &#60;nom du jar&#62;.jar app=game [...]
+> java -jar &#60;nom du jar&#62;.jar game [...]
 
 **/!\ Lors de la fermeture des éventuelles fenêtres, vous allez être redirigé vers la console. Tapez 'quit' pour tuer le programme.**
 
@@ -106,9 +106,9 @@ L'échantillon de temps est $\Delta t = 1 ms$. Tout évènement d'une durée inf
 
 ## Calcul des positions et vitesses des boules
 
-Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](#représentations)
+Le calcul de résolution des équations précédentes est effectué dans le fichier [board.cl](src/main/resources/board.cl). On utilise ainsi l'accélération du processeur graphique pour réaliser très rapidement ces résolutions en parallèle. L'application Java transmet la [représentation du billard](#représentations) à OpenCL, qui renvoie la nouvelle position des boules.
 
-L'algorithme utilisé est sembable à celui d'Euler explicite.
+L'algorithme de résolution utilisé est Runge-Kutta d'ordre 4.
 
 ## Estimation du meilleur coup
 

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 /**
  * Argument d'application définissant directement la valeur de la propriété associée.
- * @param <T>
+ * @param <T> Type de la valeur de l'argument.
  */
 public class PropertyArgument<T> extends ApplicationArgument<T> {
     @Getter
@@ -15,6 +15,4 @@ public class PropertyArgument<T> extends ApplicationArgument<T> {
         super(required, prefix, defaultValue, description);
         this.property = property;
     }
-
-
 }

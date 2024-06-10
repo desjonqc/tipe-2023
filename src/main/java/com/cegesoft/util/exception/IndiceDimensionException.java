@@ -1,7 +1,7 @@
 package com.cegesoft.util.exception;
 
 /**
- * Erreur appelée lorsqu'un indice est de dimension incorrect.
+ * Erreur appelée lorsqu'un indice est de dimension incorrecte.
  */
 public class IndiceDimensionException extends Exception {
 
